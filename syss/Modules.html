@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<link rel="stylesheet" type="text/css" href="../js/easyui/themes/icon.css">
+		<link rel="stylesheet" type="text/css" href="../js/easyui/themes/default/easyui.css">
+		<script type="text/javascript" src="../js/easyui/jquery.min.js"></script>
+		<script type="text/javascript" src="../js/easyui/jquery.easyui.min.js"></script>
+		<script type="text/javascript" src="../js/easyui/locale/easyui-lang-zh_CN.js"></script>
+		<script type="text/javascript" src="../js/easyUIvalidate.js"></script>
+		<script src="../js/login-permission-interceptor.js"></script>
+		<script src="../js/data-require-permission.js"></script>
+	</head>
+
+	<body data-require-permission='module:queryModules'>
+		<div style="color: red; font-size: 13px;">提示：右击节点进行操作</div>
+		<hr />
+		<div style="margin-bottom:5px">
+			模块名称: <input class="easyui-textbox" id="mName" style="width:80px">
+			<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search" onclick="loadtree()">查找</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-reload" onclick="refresh()">刷新</a>
+		</div>
+		<div class="easyui-panel" style="padding:5px">
+			<table id="tt" class="easyui-treegrid" style="width:600px;height:400px">
+				<thead>
+					<tr>
+						<th data-options="field:'moduleName',width:200">模块名称</th>
+						<th data-options="field:'moduleWeight',width:80,align:'right'">模块权重</th>
+						<th data-options="field:'moduleUrl',width:180">模块路径</th>
+						<th data-options="field:'moduleId',width:80" hidden="true">模块id</th>
+						<th data-options="field:'parentId',width:80" hidden="true">父idd</th>
+					</tr>
+				</thead>
+			</table>
+		</div>
+		<div id="mm" class="easyui-menu" style="width:120px;">
+			<div onclick="append()" data-options="iconCls:'icon-add'" data-require-permission='module:addModule'>追加</div>
+			<div onclick="update()" data-options="iconCls:'icon-mini-edit'" data-require-permission='module:updateModule'>编辑</div>
+			<div onclick="removea()" data-options="iconCls:'icon-remove'" data-require-permission='module:deleteModule'>移除</div>
+		</div>
+		<div id="addmk_window" title="添加节点" class="easyui-window" data-options="modal:true,closed:true,iconCls:'icon-save'" style="width:500px;height:300px;padding:10px;">
+			<form id="addmkForm">
+				<table cellpadding="5">
+					<header id="sztitle"></header>
+					<tr>
+						<td>模块名称:</td>
+						<td><input class="easyui-textbox" type="text" name="name" id="jdname" data-options="required:true,validType:'unnormal'"></input>
+						</td>
+					</tr>
+					<tr>
+						<td>路径:</td>
+						<td><input class="easyui-textbox" type="text" id="ur" value="sys/cjcx.html" data-options="required:true"></input>
+						</td>
+					</tr>
+					<tr>
+						<td>权重:</td>
+						<td><input class="easyui-numberbox" type="text" name="email" id="weight" data-options="required:true,validType:'intPlus'"></input>
+						</td>
+					</tr>
+				</table>
+			</form>
+			<div style="text-align:center;padding:5px">
+				<a href="javascript:void(0)" class="easyui-linkbutton" type="button" onclick="addmk()">保存</a>
+			</div>
+		</div>
+		<!--修改-->
+		<div id="updatemk_window" title="修改节点" class="easyui-window" data-options="modal:true,closed:true,iconCls:'icon-save'" style="width:500px;height:300px;padding:10px;">
+			<form id="updatemkForm">
+				<table cellpadding="5">
+					<header id="xgtitle"></header>
+					<tr>
+						<td>模块名称:</td>
+						<td><input class="easyui-textbox" type="text" name="moduleName" id="jdname1" data-options="required:true"></input>
+						</td>
+					</tr>
+					<tr>
+						<td>路径:</td>
+						<td><input class="easyui-textbox" type="text" id="url" name="moduleUrl" data-options="required:true"></input>
+						</td>
+					</tr>
+					<tr>
+						<td>权重:</td>
+						<td><input class="easyui-numberbox" type="text" name="moduleWeight" id="weight1" data-options="required:true,validType:'intPlus'"></input>
+						</td>
+					</tr>
+				</table>
+			</form>
+			<div style="text-align:center;padding:5px">
+				<a href="javascript:void(0)" class="easyui-linkbutton" type="button" onclick="updatemk()">保存</a>
+			</div>
+		</div>
+	</body>
+	<script>
+		var mkid;
+		var userid = window.sessionStorage.getItem("userid");
+		var localToken = window.sessionStorage.getItem("token");
+
+		$(function() {
+
+			loadtree();
+		});
+
+		function refresh() {
+			$("#mName").textbox("clear");
+			loadtree();
+		}
+
+		function loadtree() {
+			var mname = $("#mName").textbox("getValue");
+			$('#tt').treegrid({
+				url: "http://localhost:8080/HWWC/module/queryModules.dao",
+				idField: 'moduleId',
+				treeField: 'moduleName',
+				queryParams: {
+					token: localToken,
+					mname: mname
+
+				},
+
+				formatter: function(node) {
+
+					return node.moduleName
+				},
+				onContextMenu: function(e, node) {
+
+					e.preventDefault();
+					// 查找节点
+					$('#tt').treegrid('select', node.moduleId);
+
+					// 显示快捷菜单
+					$('#mm').menu('show', {
+						left: e.pageX,
+						top: e.pageY
+					});
+				},
+				onLoadSuccess: function(row, data) {
+					var d = $("#tt").treegrid("getData");
+
+					var c;
+					for(var i = 0; i < d.length; i++) {
+
+						var c = $("#tt").treegrid("getChildren", d[i].moduleId)
+
+						if(c.length == 0) {
+							$("#tt").treegrid("remove", d[i].moduleId);
+						}
+					}
+
+				}
+			});
+		}
+		var shu;
+
+		function append() {
+
+			$("#addmk_window").window("open");
+			shu = $("#tt").treegrid("getSelected");
+			$("#sztitle").html("即将给模块“" + shu.moduleName + "”添加子节点")
+		}
+
+		function addmk() {
+
+			shu = $("#tt").treegrid("getSelected");
+			var jname = $("#jdname").val();
+			var ur = $("#ur").val();
+			var weight = $("#weight").val();
+			var cheri = $("#tt").treegrid("getChildren", shu.moduleId)
+			for(var i = 0; i < cheri.length; i++) {
+				if(cheri[i].moduleName == jname) {
+					$.messager.alert("提示信息", "该模块已存在,请重新输入模块名");
+					return;
+				}
+			}
+			if($("#addmkForm").form("validate")) {
+				$.post("http://localhost:8080/HWWC/module/addModule.dao?", {
+					moduleName: jname,
+					moduleUrl: ur,
+					moduleWeight: weight,
+					parentId: shu.moduleId,
+					token: localToken
+				}, function(res) {
+					if(res > 0) {
+						$("#addmkForm").form("clear");
+						$("#ur").textbox("setValue", "sys/cjcx.html");
+						$.messager.alert("提示信息", "模块添加成功");
+						$("#addmk_window").window("close");
+						loadtree();
+					}
+				}, "json");
+			} else {
+				$.messager.alert("提示信息", "请正确填写模块信息");
+			}
+
+		}
+
+		var shu1;
+		var jsn;
+
+		function update() {
+
+			node = $("#tt").treegrid("getSelected");
+			
+
+			var parentNode = $("#tt").treegrid("select", node.moduleId); //返回一个父节点
+			if(parentNode) {
+				$("#updatemk_window").window("open");
+
+				$("#xgtitle").html("即将修改模块“" + node.moduleName+"”的信息")
+				$("#jdname1").textbox("setValue", node.moduleName);
+				$("#url").textbox("setValue", node.moduleUrl);
+				$("#weight1").numberbox("setValue", node.moduleWeight);
+
+			} else {
+				$.messager.alert("提示信息", "根节点不能被修改");
+			}
+		}
+
+		function updatemk() {
+			var Parent = $("#tt").treegrid("getParent", node.moduleId);
+
+			var c = $("#tt").treegrid("getChildren", Parent.moduleId)
+			var name = $("#jdname1").val();
+			var url = $("#url").val();
+			var weight = $("#weight1").val();
+			if($("#updatemkForm").form("validate")) {
+				for(var i = 0; i < c.length; i++) {
+					if(c[i].moduleId == node.moduleId) {
+						continue;
+					}
+					if(c[i].moduleName == $("#jdname1").val()) {
+						$.messager.alert("提示信息", "该模块已存在,请重新输入模块名");
+						return;
+					}
+				}
+				$.post("http://localhost:8080/HWWC/module/updateModule.dao?", {
+					moduleId: node.moduleId,
+					moduleName: name,
+					moduleUrl: url,
+					moduleWeight: weight,
+					token: localToken
+				}, function(res) {
+					if(res > 0) {
+						$.messager.alert("提示信息", "模块修改成功");
+						$("#updatemk_window").window("close");
+						loadtree();
+						window.top.loadTree();
+					}
+				}, "json")
+			} else {
+				$.messager.alert("提示信息", "请正确填写模块信息");
+			}
+
+		}
+
+		function removea() {
+			var jname = $("#tt").treegrid("getSelected");
+			var ch = $("#tt").treegrid("getChildren", jname.moduleId);
+			var chid = jname.moduleId;
+			for(var i = 0; i < ch.length; i++) {
+				chid += "," + ch[i].moduleId;
+
+			}
+			$.messager.confirm("确认", "确定删除模块“" + jname.moduleName + "”吗？", function(rr) {
+				if(rr) {
+
+					$.post("http://localhost:8080/HWWC/module/deleteModule.dao", {
+						moduleId: chid,
+
+						token: localToken
+					}, function(res) {
+						if(res > 0) {
+							$.messager.alert("提示信息", "模块删除成功");
+							loadtree();
+						}
+						if(res.jg == -1) {
+							$.messager.alert("提示信息", "模块删除失败，以下角色：" + res.roleName + "&nbsp&nbsp正在使用该模块");
+
+						}
+					}, "json")
+				}
+			});
+		}
+	</script>
+
+</html>

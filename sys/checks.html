@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<link rel="stylesheet" type="text/css" href="/DomeH/js/easyui/themes/icon.css">
+		<link rel="stylesheet" type="text/css" href="/DomeH/js/easyui/themes/default/easyui.css">
+		<script type="text/javascript" src="/DomeH/js/easyui/jquery.min.js"></script>
+		<script type="text/javascript" src="/DomeH/js/easyui/jquery.easyui.min.js"></script>
+		<script type="text/javascript" src="../js/easyUIvalidate.js"></script>
+		<script type="text/javascript" src="/DomeH/js/easyUI/locale/easyui-lang-zh_CN.js"></script>
+		<script type="text/javascript" src="/DomeH/js/easyUIvalidate.js"></script>
+
+	</head>
+
+	<body>
+		<div class="easyui-window" title="选择删除月份" data-options="iconCls:'icon-add',minimizable:false,maximizable:false,closed:true,doSize:false" style="padding:10px;" id="openTime">
+			
+			选择月份：<input class="easyui-datebox" id="startTime" type="text" style="width: 100px;" />
+			&nbsp;&nbsp;&nbsp;&nbsp;<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-save" type="button" onclick="dleCheck()">确认</a>
+	
+		</div>
+			
+		
+		<div>
+			<table name="center" class="easyui-datagrid" id="dg" title="签到列表" style="width:300;height:400" data-options="rownumbers:true,singleSelect:true,pagination:true,method:'post',toolbar:'#usertb',pageSize:10">
+				<thead>
+					<tr>
+						<th data-options="field:'userId',width:280,hidden:true">用户ID</th>
+						<th data-options="field:'userName',width:100">用户名称</th>
+						<th data-options="field:'checkState',width:160,">签到状态 </th>
+						<th data-options="field:'checkInTime',width:160,">签到、签退时间 </th>
+						<th data-options="field:'isCancel',width:160,">是否取消签到</th>
+						<th data-options="field:'checkOutTime',width:160">取消签到时间</th>
+						<th data-options="field:'setRoleAction',width:160,align:'center',formatter:handleAtion">操作</th>
+					</tr>
+				</thead>
+			</table>
+		</div>
+		<div id="usertb" style="padding:5px; height:auto">
+				<a href="#" class="easyui-linkbutton" iconcls="icon-remove" plain="true" title="删除"  onclick="openTime()">删除</a>
+			<div style="margin-bottom:5px">
+				用户名称: <input class="easyui-textbox" id="userName" style="width:80px"> 签到时间: <input class="easyui-datebox" id="begin" type="text" />~<input class="easyui-datebox" id="end" type="text" /> 是否取消签到：
+				<select id="cc" class="easyui-combobox" name="dept">
+					<option value="">请选择</option>
+					<option value="1">是</option>
+					<option value="2">否</option>
+				</select>
+				签到状态:
+				<select id="ord" class="easyui-combobox" name="dept">
+					<option value="">请选择</option>
+					<option value="已签到">已签到</option>
+					<option value="已签退">已签退</option>
+				</select>
+				<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search" onclick="a()">查找</a>
+				<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-reload" onclick="refresh()">刷新</a>
+			</div>
+	
+		
+
+	</body>
+	<script>
+		var localToken = window.sessionStorage.getItem("token");
+
+		$(function() {
+					$("#startTime").datebox({
+	              onShowPanel: function () {//显示日趋选择对象后再触发弹出月份层的事件，初始化时没有生成月份层  
+                       span.trigger('click'); //触发click事件弹出月份层  
+                       if (!tds) setTimeout(function () {//延时触发获取月份对象，因为上面的事件触发和对象生成有时间间隔  
+                           tds = p.find('div.calendar-menu-month-inner td');  
+                           tds.click(function (e) {  
+                               e.stopPropagation(); //禁止冒泡执行easyui给月份绑定的事件  
+                               var year = $(".calendar-menu-year").val();  
+                               var month = parseInt($(this).attr('abbr'), 10);  
+                               $('#startTime').datebox('hidePanel')//隐藏日期对象  
+                               .datebox('setValue', year + '-' + month); //设置日期的值  
+                           });  
+                       }, 0)  
+                   },  
+                   parser: function (s) {//配置parser，返回选择的日期  
+                       if (!s) return new Date();  
+                       var ss = (s.split('-'));  
+                       var y = parseInt(ss[0],10);  
+                       var m = parseInt(ss[1],10);              
+                       if (!isNaN(y) && !isNaN(m)){  
+                           return new Date(y,m-1);  
+                       } else {  
+                           return new Date();  
+                       }    
+                   },  
+                   formatter: function (d) {   
+                       debugger;  
+                       var y = d.getFullYear();  
+                       var m = d.getMonth()+1;  
+                       var d = d.getDate();  
+                       return y+'-'+(m<10?('0'+m):m);  
+                   }//配置formatter，只返回年月  
+			})
+		
+		 var p = $('#startTime').datebox('panel'), //日期选择对象  
+            tds = false, //日期选择对象中月份  
+            span = p.find('span.calendar-text'); //显示月份层的触发控件  
+            
+			a();
+		})
+
+		function refresh() {
+			$("#userName").textbox("clear");
+			$("#begin").datebox("clear");
+			$("#end").datebox("clear");
+			$("#cc").combobox("clear");
+			$("#ord").combobox("clear");
+			a();
+		}
+		/**
+		 * 取消按钮
+		 */
+		function clearUserForm() {
+			$("#adduser_window").window("close");
+			$("#upuser_window").window("close");
+		}
+
+		function refresh() {
+			$("#userName").textbox("clear");
+			$("#begin").datebox("clear");
+			$("#end").datebox("clear");
+			$("#cc").combobox("clear");
+			$("#ord").combobox("clear");
+			a();
+		}
+		/**
+		 * 取消按钮
+		 */
+		function clearUserForm() {
+			$("#adduser_window").window("close");
+			$("#upuser_window").window("close");
+		}
+
+		function a() {
+			var beginTime = $("#begin").datebox("getValue");
+			var beginArr = beginTime.split("-");
+			var begin = new Date(beginArr[0], beginArr[1], beginArr[2]);
+			var begins = begin.getTime();
+			console.log(begins);
+			var endTime = $("#end").datebox("getValue");
+			var endArr = endTime.split("-");
+			var end = new Date(endArr[0], endArr[1], endArr[2]);
+			var ends = end.getTime();
+			console.log(ends);
+			if(begins > ends) {
+				$.messager.alert("提示信息", "开始时间不能晚于结束时间");
+			} else {
+				$("#dg").datagrid({
+					url: 'http://localhost:8080/HWWC/checksPs/queryUserchecks.dao', //数据接口的地址
+					queryParams: { //要发送的参数列表
+						userName: $("#userName").textbox("getValue"),
+						birthStart: beginTime,
+						birthEnd: endTime,
+						userIsLockout: $("#cc").combobox("getValue"),
+						CheckState: $("#ord").combobox("getValue"),
+						token: localToken
+					},
+					onLoadSuccess: function() {
+						$(".easyui-linkbutton").linkbutton();
+					}
+
+				});
+			}
+
+		}
+
+		function handleAtion(value, row, index) {
+
+			return "<a onclick='unCheck(" + index + ")' style='cursor: pointer; color: #0000FF;'>签退</a>";
+		}
+
+		function unCheck(i) {
+
+			var data = $("#dg").datagrid('getData');
+			var row = data.rows[i];
+
+			$.messager.confirm("提示信息", "您确定要签退“" + row.userName + "”吗?", function(r) {
+				if(r) {
+					$.post("http://localhost:8080/HWWC/checksPs/updateIsCancel.dao", {
+						token: localToken,
+						id: row.userId,
+						name: row.userName
+					}, function(res) {
+
+						if(res > 0) {
+							$.messager.alert("提示信息", "签退成功");
+							a();
+							window.top.IsCancel();
+						} else if(res == 0) {
+
+							$.messager.alert("提示信息", "签退失败，此用户今天已经签退或者还未签到！");
+						} else {
+							$.messager.alert("提示信息", "未知错误");
+
+						}
+
+					}, "json")
+
+				}
+
+			});
+
+		}
+		/**
+		 * 打开选择月份窗口
+		 */
+		function openTime(){
+			$("#openTime").window("open")
+		}
+		
+		function dleCheck(){
+			
+			$.messager.confirm("提示信息", "您确定要删除"+$("#startTime").datebox("getValue")+"月份的数据吗？", function(r){
+				
+				if(r){
+					$.post("http://localhost:8080/HWWC/checksPs/deleteChecks.dao",{
+						
+						token:localToken,
+						time:$("#startTime").datebox("getValue")
+					},function(res){
+						if(res>0){
+							$.messager.alert("提示信息", "删除成功");
+							$("#openTime").window("close");
+							a();
+						}else{
+							$.messager.alert("提示信息", "请稍后再试~");
+						}
+						
+					},"json")
+					
+				}
+				
+			})
+			
+		}
+	
+	</script>
+
+</html>

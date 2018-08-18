@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<link rel="stylesheet" type="text/css" href="/DomeH/js/easyui/themes/icon.css">
+		<link rel="stylesheet" type="text/css" href="/DomeH/js/easyui/themes/default/easyui.css">
+		<script type="text/javascript" src="/DomeH/js/easyui/jquery.min.js"></script>
+		<script type="text/javascript" src="/DomeH/js/easyui/jquery.easyui.min.js">
+		</script>
+		<script type="text/javascript" src="/DomeH/js/easyUIvalidate.js"></script>
+		<script type="text/javascript" src="/DomeH/js/easyUI/locale/easyui-lang-zh_CN.js"></script>
+
+		<script src="/DomeH/js/login-permission-interceptor.js" type="text/javascript" charset="utf-8"></script>
+
+		<script>
+			var localToken = window.sessionStorage.getItem("token");
+			$(function() {
+					//初始化数据
+					$("#askerInfo").datagrid({
+						method: 'post',
+						url: 'http://localhost:8080/HWWC/asker/queryAskers.dao', //调用数据接口
+						queryParams: { //传递参数
+							token: localToken
+						}
+					});
+				})
+				//操作内容
+			function handleAtion(value, row, index) {
+				return '<a href="#" class="easyui-linkbutton l-btn l-btn-small l-btn-plain" iconcls="icon-edit" plain="true" onclick="openWeight(' + "'" + index + "'" + ')"><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">编辑权重</span><span class="l-btn-icon icon-edit">&nbsp;</span></span></a>';
+			}
+			//打开更新权重div
+			function openWeight(index) {
+				var data = $("#askerInfo").datagrid('getData');
+				var row = data.rows[index];
+				$("#u_askerId").val(row.askerId);
+				$('#u_weight').textbox("setValue", row.weight);
+				$('#u_bakContent').textbox("setValue", row.bakContent);
+				$("#updateWeight").window('open');
+			}
+			//更新
+			function updateWeight() {
+				var flag = $("#askerForm").form("validate");
+				var askerId = $('#u_askerId').val();
+				var weight = $('#u_weight').textbox("getValue");
+				var bakContent = $('#u_bakContent').textbox("getValue");
+				if(flag) {
+					$.post("http://localhost:8080/HWWC/asker/updateAsker.dao", {
+							askerId: askerId,
+							weight: weight,
+							bakContent: bakContent,
+							token: localToken
+						},
+						function(res) {
+							if(res > 0) {
+								$.messager.alert('提示信息', '保存编辑权重成功');
+								$('#updateWeight').window('close');
+								$("#askerInfo").datagrid('reload');
+							} else {
+								$.messager.alert('提示信息', '保存编辑权重失败，请稍后重试');
+							}
+						}, "json");
+				} else {
+					$.messager.alert("提示信息", "请按照要求填写信息！");
+				}
+			}
+		</script>
+	</head>
+
+	<body>
+		<table id="askerInfo" class="easyui-datagrid" title="用户信息" style="width:100%;height:380px" data-options="singleSelect:true,collapsible:true,pagination:true">
+			<thead>
+				<tr>
+					<th field="askerName" width="15%" align="center">用户名</th>
+					<th field="roleName" width="15%" align="center">角色</th>
+					<th field="checkState" width="15%" align="center">签到状态</th>
+					<th field="weight" width="15%" align="center">权重</th>
+					<th field="bakContent" width="20%" align="center">备注</th>
+					<th field="setWeight" width="20%" align="center" formatter="handleAtion">操作</th>
+				</tr>
+			</thead>
+		</table>
+		<div id="updateWeight" class="easyui-window" title="编辑" data-options="iconCls:'icon-edit',minimizable:false,closed:true," style="width:60%;height:300px;padding:10px;">
+			<input id="u_askerId" type="hidden" />
+			<table border="1" bordercolor="#a0c6e5" style="border-collapse:collapse;margin:10px auto;width:40%" ;>
+				<tr>
+					<td>权重:</td>
+					<td align="center"><input class="easyui-numberbox" id="u_weight" name="weight" style="width:98%" data-options="required:true,validType:'intPlus'" /></td>
+				</tr>
+
+				<tr>
+					<td>备注:</td>
+					<td colspan="3" align="center">
+						<input id="u_bakContent" name="bakContent" class="easyui-textbox" min="1" data-options="multiline:true" style="border:none;width:98%;resize:none;font-size:13px" />
+					</td>
+				</tr>
+				<tr>
+					<td colspan="4" align="center">
+						<a href="#" class="easyui-linkbutton" iconCls="icon-save" onclick="updateWeight()">保存</a>
+						<a href="#" class="easyui-linkbutton" iconCls="icon-cancel" onclick="$('#updateWeight').window('close')">取消</a>
+					</td>
+				</tr>
+			</table>
+			</form>
+		</div>
+		
+		
+	</body>
+
+</html>

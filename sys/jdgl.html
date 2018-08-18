@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<link rel="stylesheet" type="text/css" href="../js/easyui/themes/icon.css">
+		<link rel="stylesheet" type="text/css" href="../js/easyui/themes/default/easyui.css">
+		<script type="text/javascript" src="../js/easyui/jquery.min.js"></script>
+		<script type="text/javascript" src="../js/easyui/jquery.easyui.min.js"></script>
+		<script type="text/javascript" src="../js/easyui/locale/easyui-lang-zh_CN.js"></script>
+		<script type="text/javascript" src="../js/easyUIvalidate.js"></script>
+		<script src="../js/login-permission-interceptor.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../js/data-require-permission.js"></script>
+	</head>
+
+	<body data-require-permission='role:queryRole'>
+		<table name="center" id="dg" title="用户列表" style="width:300;height:400" data-options="rownumbers:true,singleSelect:true,pagination:true,method:'post',toolbar:'#usertb',pageSize:10">
+			<thead>
+				<tr>
+					<th data-options="field:'roleName',width:100">角色名称</th>
+					<th data-options="field:'roleExplain',width:100,align:'center'">角色说明</th>
+					<th data-options="field:'update',width:100,formatter:FmUpdateJs,align:'center'" data-require-permission='role:updateRole'>操作</th>
+					<th data-options="field:'delete',width:100,formatter:FmUDeleteJs,align:'center'" data-require-permission="role:deleteRole">操作</th>
+					<th data-options="field:'query',width:100,formatter:FmQueryJs,align:'center'" data-require-permission='role:deleteThisUsRole' >操作</th>
+					<th data-options="field:'qxgl',width:100,formatter:FmSzqx,align:'center'" data-require-permission='role:setModule'>设置模块</th>
+					<th data-options="field:'qx',width:100,formatter:Fmqx,align:'center'" data-require-permission='role:setPermission'>设置权限</th>
+				</tr>
+			</thead>
+		</table>
+
+		<div id="usertb" style="padding:5px; height:auto">
+			<div style="margin-bottom:5px">
+				角色名称: <input class="easyui-textbox" id="rName" style="width:80px">
+				<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search" onclick="searchUserInfo()">查找</a>
+				<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" onclick="addInfo()">新增</a>
+				<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-reload" onclick="refresh()">刷新</a>
+			</div>
+		</div>
+		<div id="updatejs" title="编辑角色信息" class="easyui-window" data-options="modal:true,closed:true,iconCls:'icon-save'" style="width:500px;height:300px;padding:10px;">
+			<form id="updatejs_form">
+
+				<table>
+					<tr>
+						<td>角色名称:</td>
+						<td>
+							<input class="easyui-textbox" type="text" name="roleName" id="ename1" data-options="required:true,validType:'unnormal'"></input>
+							<input type="hidden" id="upjsid" name="roleId">
+						</td>
+
+					</tr>
+					<tr>
+						<td></td>
+
+					</tr>
+					<tr>
+						<td></td>
+
+					</tr>
+					<tr>
+						<td>角色说明:</td>
+						<td>
+							<input class="easyui-textbox" type="text" name="roleExplain" id="ename2" data-options="required:true"></input>
+
+						</td>
+					</tr>
+				</table>
+
+			</form>
+			<div style="text-align:center;padding:5px">
+				<a href="javascript:void(0)" class="easyui-linkbutton" type="button" onclick="updatejsx()">保存</a>
+			</div>
+		</div>
+		<div id="addjs" title="新增角色信息" class="easyui-window" data-options="modal:true,closed:true,iconCls:'icon-save'" style="width:500px;height:300px;padding:10px;">
+			<form id="addjs_form">
+				<table>
+					<tr>
+						<td>角色名称:</td>
+						<td>
+							<input class="easyui-textbox" type="text" name="roleName" id="addname" data-options="required:true,validType:'unnormal'"></input>
+							<input type="hidden" name="" id="jsid">
+						</td>
+					</tr>
+					<tr>
+						<td></td>
+
+					</tr>
+					<tr>
+						<td></td>
+
+					</tr>
+					<tr>
+						<td>角色说明:</td>
+						<td>
+							<input class="easyui-textbox" type="text" name="roleExplain" id="addname2" data-options="required:true"></input>
+
+						</td>
+					</tr>
+				</table>
+
+			</form>
+			<div style="text-align:center;padding:5px">
+				<a href="javascript:void(0)" class="easyui-linkbutton" type="button" onclick="addsx()">保存</a>
+			</div>
+		</div>
+		<div class="easyui-dialog" id="szqx" data-options="modal:true,closed:true,iconCls:'icon-save',buttons:'#bc'" style="width:300px;height:500px;padding:10px;">
+			<div class="easyui-panel" style="padding:5px">
+				<ul id="tt" class="easyui-tree" data-options="iconCls:'icon-save',collapsible:true,checkbox:true"></ul>
+			</div>
+			<div style="text-align:center;padding:5px" id="bc">
+				<a href="javascript:void(0)" class="easyui-linkbutton" type="button" onclick="nextQx()">保存</a>
+			</div>
+		</div>
+		<!-- 查询该角色的用户信息 -->
+		<div id="roleUsetb" class="easyui-window"  data-options="modal:true,closed:true,iconCls:'icon-save'" style="width:900px;height:500px;padding:10px;">
+			<table id="roleUsetbInfo" class="easyui-datagrid" style="width:100%;height:380px" title="用户信息" data-options="rownumbers:true,singleSelect:true" pagination="true">
+				<thead>
+					<tr>
+						<th data-options="field:'userId',width:280,hidden:true">用户ID</th>
+						<th data-options="field:'userName',width:100,align:'center'">用户名</th>
+						<th data-options="field:'userEmail',width:160,align:'center'">邮箱</th>
+						<th data-options="field:'userTelephone',width:100,align:'center'">手机号</th>
+						<th data-options="field:'userIsLockout',width:60,align:'center'">是否锁定</th>
+						<th data-options="field:'userLastLoginTime',width:160,align:'center'">最后登录的时间</th>
+						<th data-options="field:'userLastLoginIp',width:160,align:'center'">最后登录的IP地址</th>
+						<th data-options="field:'userLastLoginIp2',width:100,formatter:FmDeleteThisUser,align:'center'">解除用户</th>
+					</tr>
+				</thead>
+			</table>
+		</div>
+	</body>
+	<script>
+		var localToken = window.sessionStorage.getItem("token");
+		var userid = window.sessionStorage.getItem("userid");
+		$(function() {
+
+			searchUserInfo();
+		});
+
+		function refresh() {
+			$("#rName").textbox("clear");
+			searchUserInfo();
+		}
+
+		function searchUserInfo() {
+			$("#dg").datagrid({
+				url: 'http://localhost:8080/HWWC/role/queryRole.dao', //数据接口的地址
+				queryParams: { //要发送的参数列表
+					token: localToken,
+					roleName: $("#rName").textbox("getValue")
+				}
+			});
+		}
+
+		function FmUpdateJs(value, row, index) {
+			return "<a style='cursor: pointer;' onclick='UpdateJs(" + index + ")' >编辑</a>";
+		}
+		function FmDeleteThisUser(value, row, index){
+			
+			return "<a style='cursor: pointer;' onclick='DeleteThisUser(" + index + ")' >解除</a>";
+			
+		}
+
+
+		function UpdateJs(r) {
+			$("#updatejs").window("open")
+			var iname = $("#dg").datagrid("getData");
+			var row = iname.rows[r];
+			$("#updatejs_form").form('load', row);
+		}
+
+		function updatejsx() {
+			var flag = $("#updatejs_form").form("validate");
+			var roleName = $("#ename1").val();
+			var roleExplain = $("#ename2").val();
+			var id = $("#upjsid").val();
+			if(flag) {
+				$.post("http://localhost:8080/HWWC/role/updateRole.dao", {
+					token: localToken,
+					roleName: roleName,
+					roleExplain: roleExplain,
+					roleId: id
+				}, function(res) {
+					if(res > 0) {
+						$.messager.alert("提示信息", "角色信息修改成功");
+						$("#updatejs").window("close");
+						$("#dg").datagrid("reload");
+					} else if(res == -1) {
+						$.messager.alert("提示信息", "该角色已存在,请重新输入");
+						$("#addjs_form").form("clear")
+					}
+				}, "json")
+			} else {
+				$.messager.alert("提示信息", "请正确填写角色信息");
+			}
+		}
+
+		function FmQueryJs(value, row, index) {
+			return "<a  style='cursor: pointer;' onclick='QueryJs(" + index + ")' >查询</a>";
+		}
+		var rid;
+		function QueryJs(r){
+			var data = $("#dg").datagrid("getData");
+			var row = data.rows[r];
+			$("#roleUsetb").window({title: "<span style='color:red'>"+row.roleName+"</span>"+"下的用户"});
+			$("#roleUsetb").window("open");
+			
+			
+				$("#roleUsetbInfo").datagrid({
+					method: 'post',
+					url: 'http://localhost:8080/HWWC/role/queryRoleUsertb.dao', //调用数据接口
+					queryParams: { //传递参数
+						roleName: row.roleName,
+						token: localToken
+					}
+				});
+				rid= row.roleId;
+		}
+		
+		function DeleteThisUser(i){
+		
+	
+			var iname = $("#roleUsetbInfo").datagrid("getData");
+			var row = iname.rows[i];
+		
+	
+			
+			$.post("http://localhost:8080/HWWC/role/deleteThisUsRole.dao",{
+				token: localToken,
+				roleId:rid,
+				userId:row.userId
+				
+			},function(r){
+				
+						if(r > 0) {
+								$("#roleUsetbInfo").datagrid("reload");
+								$.messager.alert("提示信息", "解除成功");	
+							} else if(r.jg == -3) {
+								$("#roleUsetbInfo").datagrid("reload");
+								$.messager.confirm("解除成功", "此用户下存在学生，是否启用自动分配咨询师？", function(is) {
+									if(is) {
+										$.post("http://localhost:8080/HWWC/auto/isAuto.dao", {
+											isAuto: 1,
+											token: localToken,
+											isFp: 1,
+											dltUser: r.dltUser
+										}, function(res) {
+											if(res == -66) {
+												$.messager.alert("提示信息", "自动分配失败，今天没有签到的咨询师");
+
+											} else if(res > 0) {
+												$.messager.alert("提示信息", "分配成功");
+											} else {
+												$.messager.alert("提示信息", "未知错误，请稍后再试");
+
+											}
+
+										}, "json");
+
+									} else {
+										$.post("http://localhost:8080/HWWC/auto/isAuto.dao", {
+											isAuto: 0,
+											token: localToken,
+											isFp: 2,
+											dltUser: r.dltUser
+										}, function(res) {
+
+										}, "json");
+									}
+								});
+							} else {
+								$.messager.alert("提示信息", "解除失败");							}
+				
+			},"json")
+		}
+		
+		function FmUDeleteJs(value, row, index) {
+			return "<a style='cursor: pointer;' onclick='DeleteJs(" + index + ")' >删除</a>";
+		}
+
+		/**
+		 * 删除当前角色
+		 * @param {Object} r
+		 */
+		function DeleteJs(r) {
+			var iname = $("#dg").datagrid("getData");
+			var row = iname.rows[r];
+			$.messager.confirm("确认", "确定删除“" + row.roleName + "”角色吗？", function(rr) {
+				if(rr) {
+					$.post("http://localhost:8080/HWWC/role/deleteRole.dao", {
+						roleId: row.roleId,
+						token: localToken
+					}, function(res) {
+						if(res > 0) {
+							$.messager.alert("提示信息", "角色删除成功");
+							$("#dg").datagrid("reload");
+						} else if(res.jg == -1) {
+							$.messager.alert("提示信息", "角色删除失败，此角色存在以下模块：" + res.ModuleName);
+						} else if(res.jg == -2) {
+							$.messager.alert("提示信息", "角色删除失败，此角色正被以下用户：" + res.userName + " 使用");
+						}else if(res.jg == -3) {
+							$.messager.alert("提示信息", "删除失败，该角色下存在权限！");
+						}
+					}, "json");
+				}
+			});
+		}
+
+		function addInfo() {
+			$("#addjs").window("open");
+		}
+
+		function addsx() {
+			var flag = $("#addjs_form").form("validate");
+			var ename = $("#addname").val();
+			var ename2 = $("#addname2").val();
+			if(flag) {
+				$.post("http://localhost:8080/HWWC/role/addRole.dao", {
+					token: localToken,
+					roleName: ename,
+					roleExplain: ename2
+				}, function(res) {
+					if(res > 0) {
+						$.messager.alert("提示信息", "新增角色成功");
+						$("#addjs").window("close");
+						$("#dg").datagrid("reload"); //通过调用reload方法，让datagrid刷新显示数据
+						$("#addjs_form").form("clear")
+					} else if(res == -1) {
+						$.messager.alert("提示信息", "该角色已存在,请重新输入！");
+						$("#addjs_form").form("clear")
+					}
+				}, "json");
+			} else {
+				$.messager.alert("提示信息", "请正确填写角色信息");
+			}
+		}
+
+		function FmSzqx(value, row, index) {
+			return "<a style='cursor: pointer;' onclick='Szqx(" + index + ")' >设置</a>";
+		}
+
+		function Fmqx(value, row, index) {
+			return "<a style='cursor: pointer;' onclick='qx(" + index + ")' >设置</a>";
+		}
+
+		var a_roleId;
+		var url;
+
+		function qx(r) {
+			var iname = $("#dg").datagrid("getData");
+			var row = iname.rows[r];
+			a_roleId = row.roleId;
+			$("#szqx").panel("setTitle", "您正在设置“" + row.roleName + "”的权限")
+			$("#szqx").window("open");
+			url = "http://localhost:8080/HWWC/role/setPermission.dao";
+			$('#tt').tree({
+				url: "http://localhost:8080/HWWC/role/queryPermission.dao",
+				queryParams: {
+					token: localToken,
+					rid: a_roleId
+
+				},
+
+			});
+
+		}
+
+		function Szqx(r) {
+			var iname = $("#dg").datagrid("getData");
+			var row = iname.rows[r];
+			a_roleId = row.roleId;
+			$("#szqx").panel("setTitle", "您正在设置“" + row.roleName + "”的模块")
+			$("#szqx").window("open");
+			url = "http://localhost:8080/HWWC/role/setModule.dao";
+			$('#tt').tree({
+				url: "http://localhost:8080/HWWC/role/queryModule.dao",
+				queryParams: {
+					token: localToken,
+					rid: a_roleId
+
+				},
+			});
+
+		}
+
+		function nextQx() {
+			var iname = $("#dg").datagrid("getData");
+			var nodes = $("#tt").tree("getChecked", ['checked', 'indeterminate']);
+
+			var s = "";
+			for(var i = 0; i < nodes.length; i++) {
+				if(nodes[i].id == undefined) {
+					s += "";
+				} else {
+					if(s == "") {
+						s += nodes[i].id;
+					} else {
+						s += ",";
+						s += nodes[i].id;
+					}
+				}
+
+			}
+			$.post(url, {
+				mId: s,
+				roleId: a_roleId,
+				token: localToken,
+				userId: userid
+			}, function(res) {
+				if(res > 0) {
+					$.messager.alert("提示信息", "设置成功")
+					window.top.loadTree();
+					a_roleId = "";
+					$("#szqx").window("close");
+				} else if(res.jg == -1) {
+					LiuGeTu.setPermission(res.permission);
+
+					$.messager.alert("提示信息", "设置成功")
+					window.top.loadTree();
+					a_roleId = "";
+					$("#szqx").window("close");
+				}
+
+			}, "json")
+		}
+	</script>
+
+</html>

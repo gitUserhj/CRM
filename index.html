@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<link rel="stylesheet" type="text/css" href="js/easyui/themes/icon.css">
+		<link rel="stylesheet" type="text/css" href="js/easyui/themes/default/easyui.css">
+		<script type="text/javascript" src="js/easyui/jquery.min.js"></script>
+		<script type="text/javascript" src="js/easyui/jquery.easyui.min.js">
+		</script>
+		<script src="js/data-require-permission.js"></script>
+		<script type="text/javascript" src="js/easyui/locale/easyui-lang-zh_CN.js"></script>
+		<script src="js/echarts.common.min.js"></script>
+		<script src="js/login-permission-interceptor.js" type="text/javascript" charset="utf-8"></script>
+	
+		<script type="text/javascript" src="lib/circle_JT_min.js" ></script>
+	</head>
+
+	<body>
+		<!--
+        	显示工资失败员工窗口
+       	-->
+       	<div id="noEmployee" class="easyui-window" title="申请失败列表" data-options="iconCls:'icon-add',minimizable:true,maximizable:true,closed:true,maximized:true" style="width:300px;height:200px">
+	     	<table name="center" id="dg" title="用户列表" data-options="rownumbers:true,singleSelect:true,method:'post',toolbar:'#usertb',pageSize:10">
+				<thead>
+					<tr>
+						<th data-options="field:'studentName',width:280">员工姓名</th>
+						<th data-options="field:'messageContent',width:280">拒绝原因</th>
+						<th data-options="field:'isOpen',width:280">拒绝时间</th>
+					</tr>
+				</thead>
+			</table>
+		</div>
+		
+		
+		
+		
+		<div class="easyui-layout" style="width:100%;height:700px;" data-options="fit:true">
+			<div data-options="region:'center'">
+				
+				<div id="tt" class="easyui-tabs">
+					<!--这个地方采用tabs控件进行布局-->
+						
+				</div>
+				<span id="max">
+					<div id="dom" style="float: left;"></div>
+					<span style="padding-left: 720px;" data-require-permission='depart:queryDepart' >
+						入职时间:<input class="easyui-datebox" id="begin" type="text" />
+						<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search" onclick="StuUrl()" data-require-permission="user:query">检索</a>
+					</span>
+					
+					<div id="main2" style="width:49%;height:500px; float:right;" >
+					</div>
+				</span>
+			</div>
+			<div data-options="region:'north'" style="height:50px">
+				<a href="http://127.0.0.1:8020/DomeH/index.html" style="text-decoration: none;" >CRM系统</a>&nbsp;&nbsp;<span id="spUName" ></span>&nbsp;&nbsp;
+				<a id="btn" onclick="tc()" style="cursor:pointer;color: #0000FF;" >安全退出</a>
+				<a id="check" onclick="check()" style="cursor:pointer;margin-left: 1000px; color: #0000FF;" ></a>
+			</div>
+			
+			
+			<div data-options="region:'west',split:true" title="导航应用" style="width:150px;">
+				<ul id="testTree"></ul>
+			</div>
+
+		</div>
+		<!--
+        	网络咨询师发送的消息窗口
+        -->
+		<div class="window" id="center" style="display: none;">
+			<div class="content" style="height:60px; width:160px; text-align: center; margin: 20px">
+				<span style="text-align: center;" id="cnt"></span>
+				<div style="margin: 15px;">
+					<a href="#" class="easyui-linkbutton" iconCls="icon-ok" onclick="showMessage('/DomeH/net/jspnamicMessage.html')">打开</a>
+					<a href="#" class="easyui-linkbutton" iconCls="icon-no" onclick="closeWin()">关闭</a>
+				</div>
+			</div>
+		</div>
+		<!--
+        	工资提示消息窗口
+        -->
+		<div class="window" id="center1" style="display: none;">
+			<div class="content" style="height:60px; width:160px; text-align: center; margin: 20px">
+				<span style="text-align: center;" id="cnt1"></span>
+				<div style="margin: 15px;">
+					<a href="#" class="easyui-linkbutton" iconCls="icon-ok" onclick="OkMessage()">收到</a>
+					
+				</div>
+			</div>
+		</div>
+		<!--
+        	工资审核失败窗口
+        -->
+		<div class="window" id="center2" style="display: none;">
+			<div class="content" style="height:60px; width:160px; text-align: center; margin: 20px">
+				<span style="text-align: center;" id="cnt2"></span>
+				<div style="margin: 15px;">
+					<a href="#" class="easyui-linkbutton" iconCls="icon-ok" onclick="openNoEm()">打开</a>	
+				</div>
+			</div>
+		</div>
+		
+	
+	</body>
+
+	<script>
+		var userid = window.sessionStorage.getItem("userid");
+		var uname = window.sessionStorage.getItem("uname");
+		var localToken = window.sessionStorage.getItem("token");
+		var myChart2 = echarts.init(document.getElementById('main2'));
+		
+		var labels = [], data=[];
+		var data2=[];
+		$(function() {
+			/**
+			 * 插件显示时钟
+			 */
+			$.circleJt({
+				domId:'dom',//必须
+				radius:100,//必须
+				pbColor:'#00796b',//必需
+                pbWidth:10,//非必需
+              	value:0,//必须
+              	totalValue:1000,//非必需
+              	percentage:true,//非必需
+                fontSize:30,
+                
+                clock:true,//如果clock为真的时候，上述属性除value,totalValue,percentage均全都无效
+                digitalWatch:true//以电子表形式显示
+			});
+			
+			
+			IsCancel()
+			
+			$.post("http://localhost:8080/HWWC/ps/updatePs.dao",{},function(res){});
+			$.post("http://localhost:8080/HWWC/netStudent/queryZxMessage.dao",{zxName:uname},function(res){
+				if(res!=0){
+					show();
+					$("#cnt").html("您有"+res.count+"未读条消息！")
+				}
+				
+			},"json");
+			$.post("http://localhost:8080/HWWC/compensation/queryCompenmessage.dao",{uid:userid},function(res){
+				
+				if(res!=null||res!=""||res.length>0){
+					show1();
+					$("#cnt1").html("您的"+res+"月工资审核已通过！")
+				}	
+			},"json");
+			
+			$.post("http://localhost:8080/HWWC/compensation/queryCompenmessageNo.dao",{uid:userid,state:0},function(res){
+
+				if(res.count>0){
+					$("#cnt2").html("有"+res.count+"条申请被拒绝了！")
+					show2();
+				}	
+			},"json");
+			
+				
+			loadTree();
+			StuUrl();
+
+		})
+		
+		
+		/**
+		 * 图 表
+		 */
+		function StuUrl(){
+			
+			data2.splice(0,data2.length);//清空数组 
+			
+			$.post("http://localhost:8080/HWWC/echarts/queryDepartEmployee.dao",{token:localToken,rzTime:$('#begin').datebox("getValue")},function(res){
+			for(var i=0;i<res.length;i++){
+				
+				data2.push(res[i])
+				labels.push(res[i].name)
+			}
+			
+		
+		myChart2.setOption({
+		    tooltip: {
+		        trigger: 'item',
+		        formatter: "{a} <br/>{b}: {c} 人({d}%)"
+		      
+		    },
+		    legend: {
+		        orient: 'vertical',
+		        x: 'left',
+		        data:labels,
+		        
+		    },
+		    
+		    series: [
+		        {
+		            name:'访问来源',
+		            type:'pie',
+		            radius: ['50%', '70%'],
+		            avoidLabelOverlap: false,
+		            
+		            label: {
+		                normal: {
+		                    show: false,
+		                    position: 'center'
+		                },
+		                emphasis: {
+		                    show: true,
+		                    textStyle: {
+		                        fontSize: '30',
+		                        fontWeight: 'bold'
+		                    }
+		                }
+		            },
+		            labelLine: {
+		                normal: {
+		                    show: false
+		                }
+		            },
+		           
+		            data:data2
+		            
+		            
+			        }
+			    ],
+			}
+			);
+			
+		},"json")
+		   
+		}   
+	
+		
+		function loadTree(){
+			
+			$("#spUName").html("欢迎您：<span style='color: red;'>'" + uname+"'</span>");
+			/**
+			 * 页面加载tree
+			 */
+			$("#testTree").tree({
+				method: "post",
+				url: "http://localhost:8080/HWWC/module/query.dao?uid=" + userid,
+				queryParams: {
+					token:localToken
+				},
+				
+				formatter: function(node) {
+					return node.moduleName
+				},
+				onSelect: function(node) {
+					$("#max").hide();
+					
+					var isLeaf = $('#testTree').tree('isLeaf', node.target); //是否是叶子节点
+					if(isLeaf) {
+						var flag = $("#tt").tabs('exists', node.moduleName);
+						if(!flag) {
+							$("#tt").tabs("add", {
+								title: node.moduleName,
+								closable: true,
+								content: "<iframe src='" + node.moduleUrl + "' style='width:100%;height:500px; border:none'/>"
+							});
+						} else {
+							$("#tt").tabs('select', node.moduleName);
+						}
+					}
+				}
+			});
+			
+						$("#tt").tabs({
+							onClose:function(node){
+								
+								var te=$("#tt").tabs("tabs");
+								if(te.length==0){
+									$("#max").show();
+									
+								}
+							}	
+							
+						})
+			
+		}
+		/**
+		 * 安全退出
+		 */
+		function tc() {
+			$.messager.confirm('提示信息', '确认退出？', function(res) {
+				if(res) {
+					$.messager.alert("提示信息", "退出成功");
+					window.sessionStorage.clear();
+					window.location.href = "login.html";
+				}
+			});
+		}
+		
+		
+		var is=false;
+		function IsCancel(){
+			$.post("http://localhost:8080/HWWC/checks/queryCheck.dao",{uname:uname,token:localToken},function(res){
+				if(res==2){
+					$("#check").html("签退");
+				}else if(res==0){
+					$("#check").html("签到");
+				}else if(res==1){
+					$("#check").hide()
+				}else if(res==3){
+					$("#check").html("签退");
+					is=true;
+				}else if(res==-666){
+					window.location.href = "login.html";
+				}
+				
+				
+			},"json")
+		}
+		function check(){
+			
+			if(is){
+				$.messager.alert("提示","签退失败，签到十分钟后才可以签退！" );
+			}else{
+				
+				$.messager.confirm("提示信息", "您确定要" + $("#check").html() + "吗？", function(res) {
+				if(res) {
+					$.post("http://localhost:8080/HWWC/checks/insertCheck.dao",{userId:userid,userName:uname,checkState:"已"+$("#check").html(),token:localToken},function(res){
+					if(res>0){
+							var n=1;
+							var int=window.setInterval(function(){ 
+							 	n--;
+							 	if(n==0){	
+							 	$.messager.alert("提示",$("#check").html()+"成功" );
+							    IsCancel();
+							 	}
+							},1000)
+						}
+						
+					},"json")
+				}
+				
+				});
+				
+				
+			}
+			
+		}
+		/**
+		 * 打开咨询师消息窗口
+		 */
+		function show() {
+				$('#center').attr('style', 'display:block');
+				var bwidth = $(window).width(); //获取浏览器的宽度
+				var bheight = $(window).height(); //获取浏览器的高度
+				var winwidth = $("#center").outerWidth(true); //获取当前窗口宽度
+				var winheight = $("#center").outerHeight(true); //获取当前窗口高度
+				var sTop = $(window).scrollTop(); //获取滚动条的高度
+				var sLeft = $(window).scrollLeft(); //获取滚动条的宽度
+				var left1 = sLeft + bwidth - winwidth; //计算窗口距左的距离
+				var top1 = sTop + bheight - winheight; //计算窗口距上的距离
+				//设置层的位置,添加动画效果
+				$("#center").animate({
+					left: left1,
+					top: top1
+				}, 300).show("slow");
+		}
+		/**
+		 * 打开咨询师消息窗口
+		 */
+		function show2() {
+				$('#center2').attr('style', 'display:block');
+				var bwidth = $(window).width(); //获取浏览器的宽度
+				var bheight = $(window).height(); //获取浏览器的高度
+				var winwidth = $("#center2").outerWidth(true); //获取当前窗口宽度
+				var winheight = $("#center2").outerHeight(true); //获取当前窗口高度
+				var sTop = $(window).scrollTop(); //获取滚动条的高度
+				var sLeft = $(window).scrollLeft(); //获取滚动条的宽度
+				var left1 = sLeft + bwidth - winwidth; //计算窗口距左的距离
+				var top1 = sTop + bheight - winheight; //计算窗口距上的距离
+				//设置层的位置,添加动画效果
+				$("#center2").animate({
+					left: left1,
+					top: top1
+				}, 300).show("slow2");
+		}
+			/**关闭工资消息*/
+			function closeWin1() {
+				$('#center1').attr('style', 'display:none');
+			}
+			
+			/**关闭消息*/
+			function closeWin() {
+				$('#center').attr('style', 'display:none');
+			}
+			/**打开消息*/
+			function showMessage(url) {
+				/*var url = "/DomeH/net/jspnamicMessage.html";*/
+				$('#tt').tabs('add', { //在tt选项卡中，创建一个选项页
+					title: '动态消息',
+					closable: true,
+					content: "<iframe frameborder='0' src='" + url + "'/>" //推荐使用iframe引入一个完整页面
+				});
+				closeWin();
+			}
+			
+			
+		/**
+		 * 打开工资消息窗口
+		 */
+		function show1() {
+			
+				$('#center1').attr('style', 'display:block');
+				var bwidth = $(window).width(); //获取浏览器的宽度
+				var bheight = $(window).height(); //获取浏览器的高度
+				var winwidth = $("#center1").outerWidth(true); //获取当前窗口宽度
+				var winheight = $("#center1").outerHeight(true); //获取当前窗口高度
+				var sTop = $(window).scrollTop(); //获取滚动条的高度
+				var sLeft = $(window).scrollLeft(); //获取滚动条的宽度
+				var left1 = sLeft + bwidth - winwidth; //计算窗口距左的距离
+				var top1 = sTop + bheight - winheight; //计算窗口距上的距离
+				//设置层的位置,添加动画效果
+				$("#center1").animate({
+					left: left1,
+					top: top1
+				}, 300).show("show1");
+		}
+		
+		/**
+		 * 点击工资消息窗口收到按钮
+		 */
+		function OkMessage(){
+			$.post("http://localhost:8080/HWWC/compensation/deleteMassege.dao",{uid:userid},function(res){
+				if(res>0){
+					
+					closeWin1();
+				}else{
+					
+					$.messager.alert("提示","未知错误，清稍后再试！" );
+				}
+				
+				
+				
+			});
+			
+		}
+		
+		/**
+		 * 打开审核失败窗口并查询出失败的员工
+		 */
+		function openNoEm(){
+			
+			$("#noEmployee").window("open");
+			
+			$("#dg").datagrid({
+					url: 'http://localhost:8080/HWWC/compensation/queryCompenmessageNo.dao', //调用数据接口
+					queryParams: { //传递参数
+						state:0,
+						uid:userid
+					},onLoadSuccess:function(){
+						var data = $("#dg").datagrid("getData").rows; //获取datagrid对应的json数据（对象集合）
+						
+						var s="";
+						for(var i=0;i<data.length;i++){
+							if(s==""){
+								s+=data[i].id
+							}else{
+								s+=","+data[i].id
+							}	
+						}
+						$.post("http://localhost:8080/HWWC/compensation/queryCompenmessageNo.dao",{state:1,ids:s},function(res){
+							
+						},"json")
+						
+						
+					}
+			});
+			
+			
+		}
+		
+		
+
+	</script>
+	<style type="text/css">
+		iframe {
+			height: 100%;
+			width: 100%;
+		}
+	</style>
+
+</html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<link rel="stylesheet" type="text/css" href="../js/easyui/themes/icon.css">
+		<link rel="stylesheet" type="text/css" href="../js/easyui/themes/default/easyui.css">
+		<script type="text/javascript" src="../js/easyui/jquery.min.js"></script>
+		<script type="text/javascript" src="../js/easyui/jquery.easyui.min.js">
+		</script>
+		<script type="text/javascript" src="../js/easyui/locale/easyui-lang-zh_CN.js"></script>
+		<script src="../js/data-require-permission.js"></script>
+		<script src="/DomeH/js/login-permission-interceptor.js" type="text/javascript" charset="utf-8"></script>
+	</head>
+
+	<body data-require-permission='ps:queryTree'>
+		<div style="margin-bottom:5px">
+			权限名称: <input class="easyui-textbox" id="pName" style="width:80px">
+			<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search" onclick="loadtree()" data-require-permission="user:query">查找</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-reload" onclick="refresh()">刷新</a>
+		</div>
+
+		<hr />
+		<div class="easyui-panel" style="padding:5px">
+			<table id="tt" class="easyui-treegrid" style="height:400px" data-options="rownumbers:true,singleSelect:true,toolbar:'#usertb'">
+				<thead>
+					<tr>
+						<th data-options="field:'text',width:200">权限名称</th>
+						<th data-options="field:'permissionValue',width:120">权限资源对象</th>
+						<th data-options="field:'permissionLastUpdateTime',width:180">权限最近一次修改时间</th>
+						<th data-options="field:'id',width:80" hidden="true">权限id</th>
+						<th data-options="field:'query',width:100,formatter:FmQueryRoleName,align:'center'">操作</th>
+						<th data-options="field:'insert',width:100,formatter:FmQueryNoHave,align:'center'">操作</th>
+					</tr>
+				</thead>
+			</table>
+		</div>
+		<!-- 查询拥有该权限的角色信息 -->
+		<!-- 解除权限 -->
+		<div id="rolePertb" class="easyui-window" data-options="modal:true,closed:true,iconCls:'icon-save'" style="width:400px;height:400px;padding:10px;">
+			<table id="rolePertbInfo" class="easyui-datagrid" style="width:auto;height:350px" title="角色信息" data-options="rownumbers:true,singleSelect:true" pagination="true">
+				<thead>
+					<tr>
+						<th data-options="field:'roleName',width:100">角色名称</th>
+						<th data-options="field:'roleExplain',width:100,align:'center'">角色说明</th>
+						<th data-options="field:'userLastLoginIp2',width:100,formatter:FmDeleteThisPer,align:'center'">操作</th>
+					</tr>
+				</thead>
+			</table>
+		</div>
+		<!-- 查询没有该权限的角色信息 -->
+		<!-- 给角色分配该权限 -->
+		<div id="noHave" class="easyui-window" data-options="modal:true,closed:true,iconCls:'icon-save'" style="width:400px;height:400px;padding:10px;">
+			<table id="noHaveInfo" class="easyui-datagrid" style="width:auto;height:350px" title="角色信息" data-options="rownumbers:true,singleSelect:true" pagination="true">
+				<thead>
+					<tr>
+						<th data-options="field:'roleName',width:100">角色名称</th>
+						<th data-options="field:'roleExplain',width:100,align:'center'">角色说明</th>
+						<th data-options="field:'FenPei',width:100,formatter:FmFenPei,align:'center'">操作</th>
+					</tr>
+				</thead>
+			</table>
+		</div>
+	</body>
+	<script>
+		var localToken = window.sessionStorage.getItem("token");
+
+		$(function() {
+
+			loadtree();
+		});
+
+		function refresh() {
+			$("#pName").textbox("clear");
+			loadtree();
+		}
+
+		function loadtree() {
+
+			var pname = $("#pName").textbox("getValue");
+
+			$('#tt').treegrid({
+				url: "http://localhost:8080/HWWC/ps/queryTree.dao?",
+				idField: 'text',
+				treeField: 'text',
+				queryParams: {
+					token: localToken,
+					pname: pname
+
+				}
+
+			});
+		}
+		/*查询拥有该权限的角色名称*/
+		function FmQueryRoleName(value, row, index) {
+			if(row.id == undefined) {
+				return "";
+			} else {
+				return "<a style='cursor: pointer;' onclick='QueryRoleName(" + row.id + ")' >查询</a>";
+			}
+
+		}
+		var pid;
+
+		function QueryRoleName(id) {
+			pid = id;
+			$("#rolePertb").window({
+				title: "拥有该权限的角色信息"
+			});
+			$("#rolePertb").window("open");
+			$("#rolePertbInfo").datagrid({
+				method: 'post',
+				url: 'http://localhost:8080/HWWC/ps/queryRoleName.dao', //调用数据接口
+				queryParams: { //传递参数
+					permissionId: pid,
+					token: localToken
+				}
+			});
+		}
+		/*解除角色的权限*/
+		function FmDeleteThisPer(value, row, index) {
+			return "<a style='cursor: pointer;' onclick='DeleteThisPer(" + index + ")' >解除</a>";
+		}
+
+		function DeleteThisPer(i) {
+			var data = $("#rolePertbInfo").datagrid("getData");
+			var row = data.rows[i];
+			$.messager.confirm("提示信息", "确定解除“" + row.roleName + "”的该权限吗？", function(r) {
+				if(r) {
+					$.post("http://localhost:8080/HWWC/ps/deleteThisPer.dao", {
+						permissionId: pid,
+						roleId: row.roleId,
+						token: localToken
+					}, function(res) {
+						if(res > 0) {
+							$.messager.alert("提示信息", "解除成功");
+							$("#rolePertbInfo").datagrid("reload");
+						} else {
+							$.messager.alert("提示信息", "解除失败");
+						}
+					}, "json")
+				}
+			});
+
+		}
+		/*查询没有该权限的角色信息*/
+
+		function FmQueryNoHave(value, row, index) {
+			if(row.id == undefined) {
+				return "";
+			} else {
+				return "<a style='cursor: pointer;' onclick='QueryNoHave(" + row.id + ")' >分配</a>";
+			}
+		}
+
+		function QueryNoHave(id) {
+			pid = id;
+			$("#noHave").window({
+				title: "没有该权限的角色信息"
+			});
+			$("#noHave").window("open");
+			$("#noHaveInfo").datagrid({
+				method: 'post',
+				url: 'http://localhost:8080/HWWC/ps/queryNoHave.dao', //调用数据接口
+				queryParams: { //传递参数
+					permissionId: pid,
+					token: localToken
+				}
+			});
+		}
+
+		/*给角色分配该权限*/
+		function FmFenPei(value, row, index) {
+			return "<a style='cursor: pointer;' onclick='FenPei(" + index + ")' >分配</a>";
+		}
+
+		function FenPei(i) {
+			var data = $("#noHaveInfo").datagrid("getData");
+			var row = data.rows[i];
+			$.messager.confirm("提示信息", "确定给“" + row.roleName + "”分配该权限吗？", function(r) {
+				if(r) {
+					$.post("http://localhost:8080/HWWC/ps/fenPei.dao", {
+						permissionId: pid,
+						roleId: row.roleId,
+						token: localToken
+					}, function(res) {
+						if(res > 0) {
+							$.messager.alert("提示信息", "分配成功");
+							$("#noHaveInfo").datagrid("reload");
+						} else {
+							$.messager.alert("提示信息", "分配失败");
+						}
+					}, "json")
+				}
+			});
+		}
+	</script>
+
+</html>

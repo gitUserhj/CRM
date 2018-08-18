@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title></title>
+
+		<link rel="stylesheet" type="text/css" href="/DomeH/js/easyui/themes/icon.css">
+		<link rel="stylesheet" type="text/css" href="/DomeH/js/easyui/themes/default/easyui.css">
+		<script type="text/javascript" src="/DomeH/js/easyui/jquery.min.js"></script>
+		<script type="text/javascript" src="/DomeH/js/easyui/jquery.easyui.min.js"></script>
+		<script type="text/javascript" src="/DomeH/js/easyUI/locale/easyui-lang-zh_CN.js"></script>
+		<script type="text/javascript" src="/DomeH/js/easyUIvalidate.js"></script>
+		<script src="/DomeH/js/login-permission-interceptor.js" type="text/javascript" charset="utf-8"></script>
+		<script src="/DomeH/js/data-require-permission.js"></script>
+
+		<script type="text/javascript">
+			var localToken = window.sessionStorage.getItem("token");
+			var thisuserId = window.sessionStorage.getItem("userid");
+			$(function() {
+				$("#all").trigger("click");
+				$("#this").trigger("click");
+			})
+
+			/**
+			 * 查询跟踪信息
+			 */
+			function searchNetFollow() {
+				//查询条件
+				var studentName = $("#studentName").textbox("getValue"); //学生名称
+				var userId = $("#askerId").combobox("getValue"); //跟踪者id
+				var followState = $("#followState").combobox("getValue"); //跟踪状态
+				var followType = $("#followType").combobox("getValue"); //跟踪类型
+				var startTime = $("#startFTime").datebox("getValue"); //跟踪时间
+				var beginArr = startTime.split("-");
+				var begin = new Date(beginArr[0], beginArr[1], beginArr[2]);
+				var begins = begin.getTime();
+				console.log(begins);
+				var endTime = $("#endFTime").datebox("getValue"); //下次跟踪时间
+				var endArr = endTime.split("-");
+				var end = new Date(endArr[0], endArr[1], endArr[2]);
+				var ends = end.getTime();
+				console.log(ends);
+				if(begins > ends) {
+					$.messager.alert("提示信息", "开始时间不能晚于结束时间");
+				} else {
+					$("#netFollowInfo").datagrid({
+						method: 'post',
+						url: 'http://localhost:8080/HWWC/netfollows/queryNetfollows.dao', //调用数据接口
+						queryParams: { //传递参数
+							name: studentName,
+							askerId: userId,
+							isValid: followState,
+							isReturnVist: followType,
+							startTime: startTime,
+							endTime: endTime,
+							token: localToken
+						}
+					});
+				}
+			}
+			/**
+			 * 查询当前用户的学生跟踪
+			 */
+			function searchThisNetFollow() {
+				//查询条件
+				var studentName = $("#studentName").textbox("getValue"); //学生名称
+
+				var followState = $("#followState").combobox("getValue"); //跟踪状态
+				var followType = $("#followType").combobox("getValue"); //跟踪类型
+				var startTime = $("#startFTime").datebox("getValue"); //跟踪时间
+				var endTime = $("#endFTime").datebox("getValue"); //下次跟踪时间
+				$("#netFollowInfo").datagrid({
+					method: 'post',
+					url: 'http://localhost:8080/HWWC/netfollows/queryThisNetfollows.dao', //调用数据接口
+					queryParams: { //传递参数
+						name: studentName,
+						askerId: thisuserId,
+						isValid: followState,
+						isReturnVist: followType,
+						startTime: startTime,
+						endTime: endTime,
+						token: localToken
+					}
+				});
+			}
+
+			//格式化日志中的内容信息
+			function formatLength(value, row, index) {
+				var str = window.decodeURI(value);
+				if(str.length > 25) {
+					return '<div title="' + str + '">' + str.substr(0, 25) + "……" + '</div>';
+				} else {
+					return str;
+				}
+			}
+
+			//操作内容
+			function logAction(value, row, index) {
+				var data = $("#netFollowInfo").datagrid('getData');
+				var row = data.rows[index];
+				return '<a href="#" class="easyui-linkbutton l-btn l-btn-small l-btn-plain" iconcls="icon-search" plain="true" onclick="getDetail(' + "'" + row.content + "'" + ')"><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">查看</span><span class="l-btn-icon icon-search">&nbsp;</span></span></a>';
+			}
+			//查看日志中的内容字段的详情信息
+			function getDetail(obj) {
+				$.messager.alert("提示信息", window.decodeURI(obj), "info");
+			}
+			//格式化日期
+			function formatTime(value, row, index) {
+				if(value) {
+					return formateTime(value);
+				} else {
+					return value;
+				}
+			}
+			
+			/**
+			 * 添加学生跟踪
+			 */
+			function addOpenFollow(){
+				$("#addfoll_window").window("open");
+				
+				
+				
+			}
+			
+			/**
+			 * 添加学生跟踪保存按钮
+			 */
+			function seveAddFollow(){
+				if($("#addfoll_window").form("validate")){
+					
+					$.post("http://localhost:8080/HWWC/netfollows/addfollows.dao",$("#addfollowsForm").serialize()+"&token="+localToken+"&userId="+thisuserId,function(res){
+					
+					if(res > 0) {
+								$.messager.alert("提示信息", "跟踪信息添加成功");
+								$("#addfoll_window").window("close");
+					}
+					
+					
+					},"json")
+					
+				}
+				
+				
+			}
+		</script>
+	</head>
+
+	<body>
+		<table style="font-size:12px;">
+			<tbody>
+				<tr>
+					<td>学员名称:</td>
+					<td><input id="studentName" name="studentName" style="border:1px solid #ccc" class="easyui-textbox"></td>
+
+					<td data-require-permission="netfollows:queryNetfollows">跟踪者：</td>
+					<td data-require-permission="netfollows:queryNetfollows"><input id="askerId" class="easyui-combobox" data-options="valueField:'userId',textField:'userName',panelHeight:'auto',method:'post',url:'http://localhost:8080/HWWC/netfollows/queryUserByFl.dao',onBeforeLoad:function(param){param.token=localToken;}" />
+					</td>
+
+				</tr>
+				<tr>
+					<td>开始时间:</td>
+					<td>
+						<input class="easyui-datebox" id="startFTime" name="startFTime">
+					</td>
+					<td>结束时间：</td>
+					<td>
+						<input class="easyui-datebox" id="endFTime" name="endFTime">
+					</td>
+				</tr>
+				<tr>
+					<td>跟踪状态:</td>
+					<td>
+						<input id="followState" name="followState" class="easyui-combobox" data-options="editable:false,valueField:'id',textField:'text',panelHeight:'auto',
+                          data:[{'id':'','text':'--请选择--','selected':true},
+                                {'id':'思量','text':'思量'},
+                                {'id':'未上门','text':'未上门'},
+                                {'id':'上门未报名','text':'上门未报名'},
+                                {'id':'报名未进班','text':'报名未进班'},
+                                {'id':'已进班','text':'已进班'},
+                                {'id':'已结业','text':'已结业'},
+                                {'id':'已就业','text':'已就业'}]" />
+					</td>
+					<td>跟踪类型:</td>
+					<td>
+						<input id="followType" name="followType" class="easyui-combobox" data-options="editable:false,valueField:'id',textField:'text',panelHeight:'auto',
+                        data:[{'id':'','text':'--请选择--','selected':true},
+                              {'id':'电话','text':'电话'},
+                              {'id':'网络','text':'网络'},
+                              {'id':'面谈','text':'面谈'},
+                              {'id':'宣讲','text':'宣讲'}]" />
+						<a href="#" class="easyui-linkbutton" iconCls="icon-search" id="all" data-require-permission="netfollows:queryNetfollows" onclick="searchNetFollow()">查询</a>
+						<a href="#" class="easyui-linkbutton" iconCls="icon-search" id="this" data-require-permission="netfollows:queryThisNetfollows" onclick="searchThisNetFollow()">查询</a>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	
+		<table id="netFollowInfo" class="easyui-datagrid" style="width:100%;height:380px" title="跟踪信息" data-options="rownumbers:true,singleSelect:true,toolbar:'#tb'" pagination="true">
+		
+			<thead>
+	
+				<tr>
+					<th field="studentName" width="5%" align="center">学生名称</th>
+					<th field="followTime" width="15%" align="center">跟踪时间</th>
+					<th field="followState" width="10%" align="center">跟踪状态</th>
+					<th field="followType" width="5%" align="center">跟踪类型</th>
+					<th field="content" width="30%" align="center" formatter="formatLength">备注</th>
+					<th field="nextFollowTime" width="15%" align="center">下次跟踪时间</th>
+					<th field="action" align="center" width="10%" align="center" formatter="logAction">操作</th>
+				</tr>
+			</thead>
+		</table>
+		<div id="tb" style="padding:3px">
+			<a href="javascript:void(0)" onclick="addOpenFollow()" class="easyui-linkbutton" iconCls="icon-add" plain="true" >添加</a>
+			
+		</div>
+		
+		<!--添加学生跟踪-->
+		<div id="addfoll_window" class="easyui-window" title="添加跟踪" data-options="modal:true,closed:true,iconCls:'icon-save'" style="width:800px;height:300px;padding:10px;">
+			<form id="addfollowsForm">
+				<table border="1" bordercolor="#a0c6e5" style="border-collapse:collapse;margin:10px auto;">
+					<tr>
+						<td>学生编号: <span class="red">*</span></td>
+						<td><input class="easyui-numberbox" id="stuId" name="studentId" type="text" data-options="required:true" missingMessage="不能为空" /></td>
+						<td>学生姓名: <span class="red">*</span></td>
+						<td><input class="easyui-datebox" id="stuName" name="studentName" type="text" data-options="required:true" missingMessage="不能为空" /></td>
+
+					</tr>
+					<tr>
+						<td>跟踪时间: <span class="red">*</span></td>
+						<td><input class="easyui-datebox" id="FollowTime" name="FollowTime" type="text" data-options="required:true" missingMessage="不能为空" /></td>
+						<td>下次跟踪时间: <span class="red">*</span></td>
+						<td><input class="easyui-datebox" id="NextFollowTime" name="NextFollowTime" type="text" data-options="required:true" missingMessage="不能为空" /></td>
+
+					</tr>
+					<tr>
+						<td>跟踪类型</td>
+						<td><input style="width: 115px;" id="FollowType" name="FollowType" class="easyui-combobox" missingMessage="不能为空" data-options="editable:false,valueField:'id',textField:'text',panelHeight:'auto',required:true,
+                        data:[{'id':'','text':'','selected':true},{'id':'面谈','text':'面谈'},{'id':'电话','text':'电话'},{'id':'网路','text':'网路'}]" />
+							<a class="easyui-linkbutton" iconcls="icon-edit" title="自定义跟踪类型" id="fltype" onclick="setFolltype()"></a>
+						</td>
+						<td>跟踪状态</td>
+						<td><input style="width: 115px;" id="FollowState" name="FollowState" class="easyui-combobox" missingMessage="不能为空" data-options="editable:false,valueField:'id',textField:'text',panelHeight:'auto',required:true,
+                        data:[{'id':'','text':'','selected':true},{'id':'思量','text':'思量'},{'id':'上门未报名','text':'上门未报名'},{'id':'报名未进班','text':'报名未进班'}]" />
+							<a class="easyui-linkbutton" iconcls="icon-edit" title="自定义跟踪类型" id="fltype" onclick="setFollState()"></a>
+						</td>
+					</tr>
+
+					<tr style="height:100px">
+						<td>在线备注</td>
+						<td colspan="5"><input id="content1" name="content" class="easyui-textbox" data-options="multiline:true" style="border:none;width:97%;height:80%;resize:none" /></td>
+					</tr>
+					<tr>
+						<td colspan="7" align="center">
+							<a href="#" class="easyui-linkbutton" iconCls="icon-save" onclick="seveAddFollow()">保存</a>
+							<a href="#" class="easyui-linkbutton" iconCls="icon-cancel" onclick="$('#addfoll_window').window('close')">取消</a>
+						</td>
+					</tr>
+				</table>
+			</form>
+		</div>
+	</body>
+
+<style>
+			
+	
+</style>
+</html>

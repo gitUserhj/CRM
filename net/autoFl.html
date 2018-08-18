@@ -1,0 +1,384 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+
+
+		<link rel="stylesheet" type="text/css" href="/DomeH/js/easyui/themes/icon.css">
+		<link rel="stylesheet" type="text/css" href="/DomeH/js/easyui/themes/default/easyui.css">
+		<link rel="stylesheet" type="text/css" href="/DomeH/js/switchbutton.css">
+		<script type="text/javascript" src="/DomeH/js/easyui/jquery.min.js"></script>
+		<script type="text/javascript" src="/DomeH/js/easyui/jquery.easyui.min.js">
+		</script>
+		<script type="text/javascript" src="/DomeH/js/easyUI/locale/easyui-lang-zh_CN.js"></script>
+		<script type="text/javascript" src="/DomeH/js/easyUIvalidate.js"></script>
+		<script src="/DomeH/js/login-permission-interceptor.js" type="text/javascript" charset="utf-8"></script>
+<script type="text/javascript">
+var localToken = window.sessionStorage.getItem("token");
+$(function(){
+		
+	 $.post("http://localhost:8080/HWWC/auto/isAuto.dao",{token:localToken},function(res){
+		
+		if(res==0){
+			
+			$("#noFpWindow").window("close")
+			$("#wSet").switchbutton({ checked: false})
+		}else if(res==1){
+				
+				$("#wSet").switchbutton({ checked: true})
+				$("#noFpWindow").window("open")
+					loadDg();
+		}
+		
+		
+	},"json")
+	
+	
+})
+
+/**
+ * 加载未分配咨询师的学生
+ */
+function loadDg(){
+	
+	$("#dg").datagrid({
+					
+						url:'http://localhost:8080/HWWC/netStudent/noFpStudent.dao',
+						queryParams: { //要发送的参数列表
+						
+						token:localToken
+						},
+						onLoadSuccess:function(){
+					
+							$('.easyui-switchbutton').switchbutton();
+							$('.easyui-linkbutton').linkbutton();
+							var sj=$("#dg").datagrid('getData');
+							if(sj.rows.length==0){
+								$("#noFpWindow").window("close")
+								
+							}
+						
+							}
+										
+					})
+}
+
+
+	/**
+	 * 开始自动分配开关
+	 */
+	function oc(){
+		var is;
+		if($("#wSet")[0].checked==false){
+			
+			is=0;
+		}else{
+			
+			is=1;
+		}
+		$.post("http://localhost:8080/HWWC/auto/isAuto.dao",{isAuto:is,token:localToken},function(res){
+			
+			if(res==0){
+				$("#noFpWindow").window("close")
+				$.messager.alert("提示信息", "成功关闭！");
+		
+			}else if(res==1){
+					$.messager.alert("提示信息", "成功开启！");
+				$("#noFpWindow").window("open")
+				loadDg();
+			}else if(res==-66){
+					$.messager.alert("提示信息", "开启失败，今天一个签到的咨询师都没有哦~");
+					$("#wSet").switchbutton({checked: false})
+			}
+			
+			
+		},"json")
+		
+		
+	}
+
+			
+
+		/*操作用户*/
+		function formatterOPUser(value, row, index) {
+			return "<a onclick='fp("+index+")' title='随机分配'><input   style='cursor: pointer;' class='easyui-switchbutton' ></a>";
+		}
+		function chakan(value,row,index){
+			return "<a  style='cursor: pointer' class='easyui-linkbutton l-btn l-btn-small l-btn-plain' iconcls='icon-search'   onclick='showStu("+index+")'>查看</a>"
+		}
+		
+		function fp(i){
+		var da = $("#dg").datagrid('getData');
+		var r = da.rows[i];
+		
+		$.post("http://localhost:8080/HWWC/auto/isAuto.dao",{isFp:3,sId:r.id,token:localToken},function(res){
+			if(res==-66){
+				$.messager.alert("提示信息", "分配失败，今天一个签到的咨询师都没有哦~");
+				
+			}else if(res>0){
+				$.messager.alert("提示信息", "分配成功！");
+				loadDg();
+			}else{
+				$.messager.alert("提示信息", "未知错误，请稍后再试！");
+			}
+			
+		},"json")
+	
+	}
+
+		/**
+			 * 打开查看學生信息窗口
+			 */
+			 function showStu(i){
+			 	var da = $("#dg").datagrid('getData');
+				var r = da.rows[i];
+				$(".empty").html("");
+			 	$("#showStu").window("open")
+
+				$("#qname").html(r.name);
+				$("#qsex").html(r.sex);
+				$("#qage").html(r.age);
+				$("#qphone").html(r.phone);
+				$("#qstuStatus").html(r.stuStatus);
+				$("#qperState").html(r.perState);
+				$("#qmsgSource").html(r.msgSource);
+				$("#qsourceUrl").html(r.sourceUrl);
+				$("#qsourceKeyWord").html(r.sourceKeyWord);
+				$("#qaddress").html(r.address);
+				$("#qstuConcern").html(r.stuConcern);
+				$("#qfromPart").html(r.fromPart);
+				$("#qxuqq").html(r.qq);
+				$("#qweiXin").html(r.weiXin);
+				$("#qisBaoBei").html(r.isBaoBei);
+				$("#qziXunName").html(r.ziXunName);
+				$("#qcreateUser").html(r.createUser);
+				$("#qcontent").html(r.content);
+				$("#qziXunName2").html(r.ziXunName);
+				$("#qlearnForward").html(r.learnForward);
+				$("#qrecord").html(r.record);
+				$("#qisValid").html(r.isValid);
+				$("#qlostValid").html(r.lostValid);
+				$("#qisReturnVist").html(r.isReturnVist);
+				$("#qfirstVisitTime").html(r.firstVisitTime);
+				$("#qisHome").html(r.isHome);
+				$("#qhomeTime").html(r.homeTime);
+				$("#qpreMoney").html(r.preMoney);
+				$("#qpreMoneyTime").html(r.preMoneyTime);
+				$("#qisPay").html(r.isPay);
+				$("#qpayTime").html(r.payTime);
+				$("#qmoney").html(r.money);
+				$("#qisReturnMoney").html(r.isReturnMoney);
+				$("#qreturnMoneyReason").html(r.returnMoneyReason);
+				$("#qisInClass").html(r.isInClass);
+				$("#qinClassTime").html(r.inClassTime);
+				$("#qinClassContent").html(r.inClassContent);
+				$("#qaskerContent").html(r.askerContent);	
+			 }
+			 
+			 /**
+			  * 开启全部分配学生
+			  */
+			 function allFp(){
+			 
+			 	var da = $("#dg").datagrid('getData').rows;
+			 	if($("#allfp")[0].checked==true){
+			 		var s="";
+			 		for(var i=0;i<da.length;i++){
+			 			if(s==""){
+							s+=da[i].id
+						}else{
+							s+=","+da[i].id
+						}
+						
+						
+			 			
+			 		}
+			 		
+			 		$.post("http://localhost:8080/HWWC/auto/isAuto.dao",{isFp:4,ids:s,token:localToken},function(res){
+			 			
+			 			if(res>0){
+			 				loadDg();
+			 				$.messager.alert("提示信息", "分配成功！");
+			
+			 			}
+			 			
+			 		},"json")
+			 	}
+			 	
+			 }
+	
+</script>
+</head>
+<body >
+	<div id="win" class="easyui-window"  title="分量设置" style="width:400px;height:300px;padding:5px;  text-align:center; ">
+	    <div style="margin:30px auto">
+	        程序自动分配开关:<input id="wSet"  name="wSet"  class="easyui-switchbutton" style="width:100px;height:30px">
+	        <br />
+	        <br />
+	        <br />
+	        <br />
+	        <br />
+	        <br />
+	        <br />
+	        <br />
+	        <br />	
+	        <a href="#" class="easyui-linkbutton" iconCls="icon-save"  onclick="oc()">保存</a>
+	    </div>    
+	</div>
+	
+	<div class="easyui-window" title="未分配咨询师的学生" id="noFpWindow" style="width:450px;height:500px;" data-options="left:900,closed:true">
+		<div style="color: #575765;" id="alldiv" onclick="allFp()">全部分配：<input id="allfp" class="easyui-switchbutton" style="width:100px;height:30px" onText="开启" offText="关闭">
+			
+		
+		</div>
+		<table name="center"  id="dg"  style="width:430px;height:430px"  data-options="rownumbers:true,singleSelect:true,pagination:true,method:'post',toolbar:'#usertb',pageSize:10"  >
+			<thead >
+				<tr>
+					<th data-options="field:'userId',width:280,hidden:true">用户ID</th>
+					<th data-options="field:'name',width:100">用户名</th>
+					<th data-options="field:'createUser',width:100,">创建人</th>
+					
+					<th data-options="field:'setUserAction',width:110,align:'center',formatter:formatterOPUser" >随机分配</th>
+					<th data-options="field:'userEmail1',width:100,align:'center',formatter:chakan" >操作</th>
+				</tr>
+			</thead>
+		</table>
+		
+		
+	</div>
+	
+	<!-- 查看学生窗口 -->
+		<div id="showStu" class="easyui-window" title="学员信息" data-options="iconCls:'icon-add',minimizable:false,closed:true,maximized:true" style="padding:10px;">
+			<form>
+				
+				<table id="showStuTable" style="border-collapse:collapse;margin:10px auto;" border="1" bordercolor="#a0c6e5">
+            <tbody><tr>
+                    <td rowspan="7" style="width:20px;padding:7px;font-size:13px;background-color:aliceblue">在线录入</td>
+                    <td>姓名<span class="red">*</span></td>
+                    <td width="100px" id="qname" class="empty"></td>
+                    <td>性别</td>
+                    <td width="100px" id="qsex" class="empty"></td>
+                    <td>年龄</td>
+                    <td width="100px" id="qage" class="empty"></td>
+            </tr>
+            <tr>
+                    <td>电话<span class="red">*</span></td>
+                    <td width="100px" id="qphone" class="empty"></td>
+                    <td>学历<span class="red">*</span></td>
+                    <td width="100px" id="qstuStatus" class="empty"></td>
+                  
+                    <td>状态<span class="red">*</span></td>
+                    <td width="100px" id="qperState" class="empty"></td>
+                   
+            </tr>
+            <tr>
+                    <td>来源渠道<span class="red">*</span></td> 
+                    <td width="100px" id="qmsgSource" class="empty"></td>
+                  
+                    <td>来源网站<span class="red">*</span></td> 
+                    <td width="100px" id="qsourceUrl" class="empty"></td>
+                    
+                    <td>来源关键词<span class="red">*</span></td>
+                    <td width="100px" id="qsourceKeyWord" class="empty"></td>
+                    
+            </tr>
+            <tr>
+                    <td>所在区域</td>                        
+                    <td width="100px" id="qaddress" class="empty"></td>
+                    <td>学员关注</td>
+                    <td width="100px" id="qstuConcern" class="empty"></td>
+                    <td>来源部门</td>
+                   <td width="100px" id="qfromPart" class="empty"></td>
+            </tr>
+            <tr>
+	                <td>学员QQ</td>
+	                <td width="100px" id="qxuqq" class="empty"></td>
+	                <td>微信号</td>
+	                <td width="100px" id="qweiXin" class="empty"></td>
+	                <td>是否报备</td>
+	                <td width="100px" id="qisBaoBei" class="empty"></td>
+            </tr>
+            <tr>
+                <td>咨询师</td>
+                 <td width="100px" id="qziXunName" class="empty"></td>
+                <td>录入人</td>
+                 <td  width="100px" id="qcreateUser" class="empty"></td>
+            </tr>
+            <tr style="height:100px">
+                <td>在线备注</td>
+                <td colspan="5" width="300px" id="qcontent" class="empty"></td> 
+            </tr>            
+            <tr>
+                <td rowspan="9" style="width:20px;padding:7px;font-size:13px;background-color:aliceblue">咨询师录入</td>
+                <td>姓名（咨询）</td>
+                <td width="100px" id="qziXunName2" class="empty"></td>
+                <td>课程方向</td>                 
+                <td width="100px" id="qlearnForward" class="empty"></td>
+                <td>打分</td>
+                <td width="100px" id="qrecord" class="empty"></td>        
+            </tr>
+            <tr>
+                <td>是否有效</td>
+                <td width="100px" id="qisValid" class="empty"></td> 
+                <td>无效原因</td>
+                <td colspan="4" width="100px" id="qlostValid" class="empty"></td>
+            </tr>
+            <tr>
+                <td>是否回访</td>                
+                <td width="100px" id="qisReturnVist" class="empty"></td> 
+                <td>首访时间</td>
+                <td colspan="3" width="100px" id="qfirstVisitTime" class="empty"></td>
+            </tr>
+             <tr>
+                 <td>是否上门</td>
+                 <td width="100px" id="qisHome" class="empty"></td> 
+                 <td>上门时间</td>
+                 <td colspan="3" width="100px" id="qhomeTime" class="empty"></td>
+            </tr>
+            <tr>
+                <td>定金数额</td>
+                <td width="100px" id="qpreMoney" class="empty"></td>              
+                <td>定金时间</td>
+                <td colspan="3" width="100px" id="qpreMoneyTime" class="empty"></td>
+            </tr>           
+            <tr>
+                <td>是否缴费</td>
+                <td width="100px" id="qisPay" class="empty"></td> 
+                <td>缴费时间</td>
+                <td width="100px" id="qpayTime" class="empty"></td> 
+                <td>缴费金额</td>
+                <td width="100px" id="qmoney" class="empty"></td>        
+            </tr>
+            <tr>
+                 <td>是否退费</td>
+                  <td width="100px" id="qisReturnMoney" class="empty"></td> 
+                 <td>退费原因</td>
+                 <td colspan="3"width="100px" id="qreturnMoneyReason" class="empty"></td>
+            </tr>
+            <tr>
+                 <td>是否进班</td>
+                  <td width="100px" id="qisInClass" class="empty"></td>
+                 <td>进班时间</td>
+                  <td width="100px" id="qinClassTime" class="empty"></td>
+                 <td>进班备注</td>
+                  <td width="100px" id="qinClassContent" class="empty"></td>
+            </tr>
+            <tr>
+                 <td>咨询师备注</td>
+                 <td colspan="5" width="300px" id="qaskerContent" class="empty"></td> 
+            </tr>            
+            <tr>
+                 <td colspan="7" align="center">                                          
+                     <a id="" group="" href="#" class="easyui-linkbutton l-btn l-btn-small"  onclick="$('#showStu').window('close')"><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">关闭</span><span class="l-btn-icon icon-cancel">&nbsp;</span></span></a>                                     
+                 </td>
+            </tr>
+		</tbody>
+		</table>
+		</form>
+
+		</div>
+</body>
+</html>

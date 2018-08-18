@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<link rel="stylesheet" type="text/css" href="../js/easyUI/themes/icon.css">
+		<link rel="stylesheet" type="text/css" href="../js/easyUI/themes/default/easyui.css">
+		<script type="text/javascript" src="../js/easyUI/jquery.min.js"></script>
+		<script type="text/javascript" src="../js/easyUI/jquery.easyui.min.js"></script>
+		<script type="text/javascript" src="../js/easyUI/locale/easyui-lang-zh_CN.js"></script>
+		<script src="../js/netStudent.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript" src="../js/dateFormatOrParse.js" ></script>
+		<script src="../js/data-require-permission.js"></script>
+	
+	</head>
+	<body>
+		
+		<table name="center" class="easyui-datagrid" id="dg" title="消息列表" style="width:300;height:400"  data-options="rownumbers:true,singleSelect:true,method:'post',toolbar:'#usertb'"  >
+			<thead >
+				<tr>
+					<th data-options="field:'id',width:280,hidden:true">学生id</th>
+					<th data-options="field:'studentName',width:100">学生名称</th>
+					<th data-options="field:'messageContent',width:300,formatter:formatLength" align="center">消息内容 </th>
+					<th data-options="field:'createTime',width:160,formatter:formateTime">发送时间 </th>
+					
+					<th data-options="field:'setRoleAction',width:160,align:'center',formatter:logAction">操作</th>
+				</tr>
+			</thead>
+		</table>
+	</body>
+	
+	<script>
+		var uname = window.sessionStorage.getItem("uname");
+		$(function(){
+		
+			var s="";
+			$("#dg").datagrid({
+					method: 'post',
+					url: 'http://localhost:8080/HWWC/netStudent/queryZxMessage.dao', //调用数据接口
+					queryParams: { //传递参数
+						zxName:uname
+					},onLoadSuccess:function(){	
+					var data = $("#dg").datagrid('getData');
+					for(var i=0;i<data.rows.length;i++){
+						if(s==""){
+							s+=data.rows[i].id
+						}else{
+							s+=","+data.rows[i].id
+						}
+					}
+					$.post("http://localhost:8080/HWWC/netStudent/queryZxMessage.dao",{id:s},function(){},"json")	
+					}
+			});
+		
+		
+		})
+		
+		
+		 function logAction(value, row, index) {
+		 	
+		 	
+				var data = $("#dg").datagrid('getData');
+				var row = data.rows[index];
+				return '<a href="#" class="easyui-linkbutton l-btn l-btn-small l-btn-plain" iconcls="icon-search" plain="true" onclick="getDetail(' + "'" + row.messageContent + "'" + ')"><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">查看</span><span class="l-btn-icon icon-search">&nbsp;</span></span></a>';
+			
+		 }
+		 //查看日志中的内容字段的详情信息
+		function getDetail(obj) {
+				$.messager.alert("内容信息", window.decodeURI(obj), "info");
+		}
+	</script>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<link rel="stylesheet" type="text/css" href="/DomeH/js/easyui/themes/icon.css">
+		<link rel="stylesheet" type="text/css" href="/DomeH/js/easyui/themes/default/easyui.css">
+		<script type="text/javascript" src="/DomeH/js/easyui/jquery.min.js"></script>
+		<script type="text/javascript" src="/DomeH/js/easyui/jquery.easyui.min.js">
+		</script>
+		<script type="text/javascript" src="/DomeH/js/easyUI/locale/easyui-lang-zh_CN.js"></script>
+		<script type="text/javascript" src="/DomeH/js/easyUIvalidate.js"></script>
+		<script src="/DomeH/js/login-permission-interceptor.js" type="text/javascript" charset="utf-8"></script>
+		<script>
+			/**
+			 * 修改密码
+			 */
+			var uname = window.sessionStorage.getItem("uname");
+			var localToken = window.sessionStorage.getItem("token");
+			function submitForm() {
+				
+				//表单验证
+				if($("#upForm").form("validate")) {
+					if($("#cpwd").val() != $("#npwd").val()) {
+						$.messager.alert("提示信息", "两次输入密码不一致", "info");
+						return false;
+					}
+					$.post("http://localhost:8080/HWWC/user/updatePwd.dao", {
+							userName: uname,
+							oldPassword: $("#opwd").val(),
+							newPassword: $("#npwd").val(),
+							token:localToken
+						},
+						function(res) {
+							if(res > 0) {
+								$.messager.alert("提示信息", "密码修改成功");
+								
+							var n=3;
+							var int=window.setInterval(function(){ 
+							 	n--;
+							 	if(n==0){	
+							 	window.sessionStorage.clear();
+								window.top.location.href = "../login.html";
+							 	}
+							},1000)
+								
+								
+							} else {
+								$.messager.alert("提示信息", "原密码输入错误");
+							}
+						}, "json");
+				}
+
+			}
+		</script>
+
+		<style type="text/css">
+			body {
+				text-align: center
+			}
+			
+			.panel {
+				text-align: center;
+				margin: 80px auto;
+			}
+		</style>
+	</head>
+
+	<body class="easyui-layout">
+		<div class="easyui-panel" title="修改密码" style="width:300px;">
+			<div style="padding:20px 20px 20px 20px">
+				<form id="upForm" method="post">
+					<table cellpadding="5">
+						<tr>
+							<td>原密码:</td>
+							<td><input class="easyui-textbox" name="oPassword" id="opwd" type="password" data-options="required:true" missingMessage="不能为空" /></td>
+						</tr>
+						<tr>
+							<td>新密码:</td>
+							<td><input class="easyui-textbox" name="nPassword" id="npwd" maxlength="15" type="password" maxlength="15" data-options="required:true" missingMessage="不能为空" /></td>
+						</tr>
+						<tr>
+							<td>确认新密码:</td>
+							<td><input class="easyui-textbox" name="cPassword" id="cpwd" maxlength="15" type="password" maxlength="15" data-options="required:true" missingMessage="不能为空"/></td>
+						</tr>
+					</table>
+				</form>
+				<div style="text-align:center;padding:5px">
+					<a href="javascript:void(0)" class="easyui-linkbutton"  onclick="submitForm()">保存</a>
+				</div>
+			</div>
+		</div>
+	</body>
+
+</html>

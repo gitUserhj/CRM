@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		
+		<link rel="stylesheet" type="text/css" href="/DomeH/js/easyui/themes/icon.css">
+		<link rel="stylesheet" type="text/css" href="/DomeH/js/easyui/themes/default/easyui.css">
+		<link rel="stylesheet" type="text/css" href="/DomeH/js/datedropper.css">
+		<link rel="stylesheet" type="text/css" href="/DomeH/js/timedropper.min.css">
+		<script type="text/javascript" src="/DomeH/js/easyui/jquery.min.js"></script>
+		<script type="text/javascript" src="/DomeH/js/easyui/jquery.easyui.min.js">
+		</script>
+		
+		<script src="/DomeH/js/datedropper.min.js"></script>
+		<script src="/DomeH/js/timedropper.min.js"></script>
+
+		<script type="text/javascript" src="/DomeH/js/easyUI/locale/easyui-lang-zh_CN.js"></script>
+		<script type="text/javascript" src="/DomeH/js/easyUIvalidate.js"></script>
+		<script src="/DomeH/js/login-permission-interceptor.js" type="text/javascript" charset="utf-8"></script>
+		<script src="/DomeH/js/data-require-permission.js"></script>
+		
+		<style type="text/css">
+		.demo{margin:80px auto 40px auto;width:320px}
+		.input{padding:6px;border:1px solid #d3d3d3}
+		</style>
+
+	</head>
+	<body>
+		<table name="center" id="dg" title="部门列表" style="width:300;height:400" data-options="rownumbers:true,singleSelect:true,method:'post',toolbar:'#usertb',pageSize:10,toolbar:'#tb'">
+			<thead>
+				<tr>
+					
+					<th data-options="field:'bmName',width:100,align:'center'">部门名称</th>
+					<th data-options="field:'ksTime',width:100,align:'center'">上班时间</th>
+					<th data-options="field:'jsTime',width:100,align:'center'">下班时间</th>
+					<th data-options="field:'bmContent',width:200,align:'center'">部门备注</th>
+					<th data-options="field:'setLock',width:100,align:'center',formatter:formatterOPUser" >部门员工</th>
+					<th data-options="field:'aa',width:100,align:'center',formatter:formatterAddEm" >添加员工</th>
+					<th data-options="field:'aa1',width:100,align:'center',formatter:formatterdltEm" >删除部门</th>
+					<th data-options="field:'11',width:100,formatter:FmUpdatebm,align:'center'">修改部门</th>
+					<!--<th data-options="field:'userTelephone',width:100,">手机号</th>
+					<th data-options="field:'userIsLockout',width:60,">是否锁定</th>
+					<th data-options="field:'userCreateTime',width:160,">创建时间</th>
+					<th data-options="field:'userLastLoginTime',width:160,">最后登录的时间</th>
+					<th data-options="field:'userLastLoginIp',width:160,">最后登录的IP地址</th>
+					<th data-options="field:'setRoleAction',width:60,align:'center',formatter:formatterSetRole" data-require-permission='user:queryMyRoles'>角色</th>
+					<th data-options="field:'setUserAction',width:120,align:'center',formatter:formatterOPUser" id="dltUpd">操作</th>
+					<th data-options="field:'setPassword',width:80,align:'center',formatter:formatterResetPassword" data-require-permission='user:reset'>操作</th>
+					<th data-options="field:'setLock',width:140,align:'center',formatter:formatterLockUser" id="dltUpd2">用户操作</th>-->
+				</tr>
+			</thead>
+		</table>
+		<!--添加部门按钮-->
+		<div id="tb" style="padding:3px">
+			<a href="javascript:void(0)" onclick="openAddDp()" class="easyui-linkbutton" iconCls="icon-add" plain="true" >添加</a>
+			
+		</div>	
+		
+		
+		
+		<!--员工窗口-->
+			<div id="adduser_window" class="easyui-window" data-options="modal:true,closed:true,iconCls:'icon-save',maximized:true" >
+				<table name="center" id="userDg" title="用户列表" style="width:300;height:400" data-options="rownumbers:true,singleSelect:true,method:'post',toolbar:'#usertb',pageSize:10">
+					<thead>
+						<tr>
+							<th data-options="field:'id',width:280,hidden:true,align:'center'">用户ID</th>
+							<th data-options="field:'emName',width:100,align:'center'">员工名称</th>
+							<th data-options="field:'createTime',width:200,align:'center'">入职时间</th>
+							<th data-options="field:'bm.bmName',width:100,formatter:formatterBmth,align:'center'">所属部门</th>
+							
+							<th data-options="field:'setPassword',width:80,align:'center',formatter:formatterXinchou">薪酬</th>
+							<!--<th data-options="field:'userTelephone',width:100,">手机号</th>
+							<th data-options="field:'userIsLockout',width:60,">是否锁定</th>
+							<th data-options="field:'userCreateTime',width:160,">创建时间</th>
+							<th data-options="field:'userLastLoginTime',width:160,">最后登录的时间</th>
+							<th data-options="field:'userLastLoginIp',width:160,">最后登录的IP地址</th>
+							<th data-options="field:'setRoleAction',width:60,align:'center',formatter:formatterSetRole" data-require-permission='user:queryMyRoles'>角色</th>
+							<th data-options="field:'setUserAction',width:120,align:'center',formatter:formatterOPUser" id="dltUpd">操作</th>
+							<th data-options="field:'setPassword',width:80,align:'center',formatter:formatterResetPassword" data-require-permission='user:reset'>操作</th>
+							<th data-options="field:'setLock',width:140,align:'center',formatter:formatterLockUser" id="dltUpd2">用户操作</th>-->
+						</tr>
+					</thead>
+				</table>
+				<div style="text-align:center;padding:5px">
+					
+					<a href="javascript:void(0)" class="easyui-linkbutton" onclick="$('#adduser_window').window('close')">取消</a>
+				</div>
+			</div>
+			
+		<!--添加员工-->
+		<div id="addEmployee_window" class="easyui-window" title="添加员工"  data-options="modal:true,closed:true,iconCls:'icon-save'" style="width:800px;height:300px;padding:10px;">
+			<form id="addEmployeeForm">
+				<table border="1" bordercolor="#a0c6e5" style="border-collapse:collapse;margin:10px auto;">
+					<tr>
+						<td>用户登陆名 <span class="red">*</span></td>
+						<td><input class="easyui-textbox" data-options="required:true" missingMessage="不能为空"  style="width: 100px;"  id="userName">
+							<a class="easyui-linkbutton" iconcls="icon-reload" title="检测" id="fltype" onclick="jcLoginName()"></a>
+						</td>
+						<td>员工姓名  <span class="red">*</span></td>
+						<td><input style="width: 115px;" id="emName" name="emName" data-options="required:true" class="easyui-textbox " missingMessage="不能为空"  />
+						</td>
+					</tr>	
+			
+					<tr>
+						<td colspan="7" align="center">
+							<a href="#" class="easyui-linkbutton" iconCls="icon-add" onclick="savaAddEm()">保存</a>
+							
+						</td>
+					</tr>
+				</table>
+			</form>
+		</div>
+		
+			<!--添加用户工资信息-->
+		<div id="addcompen_window" class="easyui-window"  data-options="modal:true,closed:true,iconCls:'icon-save'" style="width:800px;height:300px;padding:10px;">
+			<form id="addGzForm">
+				<table border="1" bordercolor="#a0c6e5" style="border-collapse:collapse;margin:10px auto;">
+
+					<tr>
+						<td>全勤天数 <span class="red">*</span></td>
+						<td><input name="allDay" class="easyui-numberbox" readonly="readonly" data-options="required:true,precision:0" missingMessage="不能为空"  style="width: 100px;"  id="day">
+							<a class="easyui-linkbutton" iconcls="icon-reload" title="获取天数" id="fltype" onclick="GetTime()"></a>
+						</td>
+						<td>工资底薪  <span class="red">*</span></td>
+						<td><input style="width: 115px;" id="dixin" name="dixin" data-options="required:true,onChange: function (a, b) { allMoney() },precision:2" class="easyui-numberbox " missingMessage="不能为空"  />
+						</td>
+					</tr>	
+					<tr>
+						
+						
+						<td>全勤奖金</td>
+						<td><input style="width: 115px;" id="bonus" name="bonus"  data-options="onChange: function (a, b) { allMoney() },precision:2"  class="easyui-numberbox" onchange="allMoney()"   />
+							
+						</td>
+						<td>其他奖金</td>
+						<td><input style="width: 115px;" id="otherBonus" data-options="onChange: function (a, b) { allMoney() },precision:2"  name="otherBonus" class="easyui-numberbox" onchange="allMoney()"   />
+						</td>
+					</tr>
+
+					<tr style="height:100px">
+						<td>工资总额 <span class="red">*</span></td>
+						<td colspan="5">
+							
+							<input id="allmoney" name="allmoney" class="easyui-numberbox" data-options="required:true,precision:2" missingMessage="不能为空" style="width: 80px;" />
+							
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+							工资说明：<input  class="easyui-textbox"  name="content"  style="height:80px;" />
+						</td>
+				
+						
+					</tr>
+					<tr>
+						<td colspan="7" align="center">
+							<a href="#" class="easyui-linkbutton" iconCls="icon-redo" onclick="savegz()">发送</a>
+							<a href="#" class="easyui-linkbutton" iconCls="icon-cancel" onclick="$('#addcompen_window').window('close')">取消</a>
+						</td>
+					</tr>
+				</table>
+			</form>
+		</div>
+		
+		
+		
+		<!--添加部门窗口-->
+	<div id="adddepartMent_window" class="easyui-window"  title="部门添加"  data-options="modal:true,closed:true,iconCls:'icon-save'" style="width:520px;height:200px;" >
+
+		<div>
+			
+			<form id="addDepartForm">
+				<table border="1" bordercolor="#a0c6e5" style="border-collapse:collapse;margin:10px auto;">
+					<tr>
+						<td>部门名称<span class="red">*</span></td>
+						<td><input class="easyui-textbox" name="bmName" data-options="required:true" missingMessage="不能为空"  style="width: 100px;"  id="dpName">
+						</td>
+						<td>部门信息 ：</td>
+						<td><input style="width: 115px;" id="dpContent" name="bmContent"  class="easyui-textbox "   />
+						</td>
+					</tr>
+					
+					<tr>
+						<td>上班时间:</td>
+						<td><input type="text" class="input" style="width: 80px;"  id="picktime" name="ksTime"  />
+						</td>
+						<td>下班时间: </td>
+						<td><input type="text" class="input" style="width: 80px;"  id="picktime1" name="jsTime"  />
+						</td>
+					</tr>
+			
+					<tr>
+						<td colspan="7" align="center">
+							<a href="#" class="easyui-linkbutton" iconCls="icon-save" onclick="savaDepartMent()">保存</a>
+							
+						</td>
+					</tr>
+				</table>
+			</form>
+
+			</div>
+		</div>
+	
+	</div>
+	
+	
+		<!--编辑部门-->
+	<div id="updatebm_window" title="修改部门" class="easyui-window" data-options="modal:true,closed:true,iconCls:'icon-save'" style="width:500px;height:300px;padding:10px;">
+			<form id="updatebm">
+			
+				
+				<table border="1" bordercolor="#a0c6e5" style="border-collapse:collapse;margin:10px auto;">
+					<tr>
+						<td>部门名称<span class="red">*</span></td>
+						<td><input class="easyui-textbox" type="text" name="bmName" id="bname" data-options="required:true" missingMessage="不能为空"  style="width: 100px;"  id="dpName">
+						</td>
+						<td>部门信息 ：</td>
+						<td><input class="easyui-textbox" type="text" id="bcontent" name="bmContent" ></input>
+						</td>
+					</tr>
+					
+					<tr>
+						<td>上班时间:</td>
+						<td><input type="text" class="input" style="width: 80px;"  id="xgbmTime" name="ksTime"  />
+						</td>
+						<td>下班时间: </td>
+						<td><input type="text" class="input" style="width: 80px;"  id="xgbmTime1" name="jsTime"  />
+						</td>
+					</tr>
+			
+				</table>
+			</form>
+			<div style="text-align:center;padding:5px">
+				<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-save" type="button" onclick="updatebmForm()">保存</a>
+			</div>
+	</div>
+	</body>
+	
+	<script>
+		var localToken = window.sessionStorage.getItem("token");
+		var userId = window.sessionStorage.getItem("userid");
+		$(function(){
+		
+			$("#picktime").timeDropper({
+				meridians: false,
+				format: 'HH:mm',
+			});
+			$("#picktime1").timeDropper({
+				meridians: false,
+				format: 'HH:mm',
+			});
+			$("#xgbmTime").timeDropper({
+				meridians: false,
+				format: 'HH:mm',
+			});
+			$("#xgbmTime1").timeDropper({
+				meridians: false,
+				format: 'HH:mm',
+			});
+							
+				$("#dg").datagrid({
+					url: 'http://localhost:8080/HWWC/depart/queryDepart.dao', //数据接口的地址
+					queryParams: { //要发送的参数列表
+						token: localToken
+					},onLoadSuccess:function(){
+						$(".easyui-linkbutton").linkbutton();
+					}
+				});
+					
+	
+		})
+		
+		/**
+		 * 格式化部门名称th
+		 */
+		function formatterBmth(value, row, index) {
+			return row.bm.bmName;
+		}
+		
+		/**
+		 * 工资总额计算
+		 */
+		function allMoney(){
+			var all=Number($("#dixin").numberbox("getValue"))+Number($("#bonus").numberbox("getValue"))+Number($("#otherBonus").numberbox("getValue"));
+			$("#allmoney").numberbox("setValue",all);
+		}
+		
+		/*添加部门员工按钮*/
+		function formatterAddEm(value, row, index) {
+			return '<a href="#" class="easyui-linkbutton" iconcls="icon-add" plain="true" title="添加"  onclick="openNewEm('+index+')">添加</a>';
+		}
+		/*删除部门按钮*/
+		function formatterdltEm(value, row, index) {
+			return '<a href="#" class="easyui-linkbutton" iconcls="icon-remove" plain="true" title="删除"  onclick="deleteDepartMent('+index+')">删除</a>';
+		}
+		
+		/*操作部门员工*/
+		function formatterOPUser(value, row, index) {
+			return "<a style='cursor: pointer;'  class='easyui-linkbutton' title='查询员工' iconcls='icon-man' onclick='openBm(" + index + ")'>查询</a>";
+		}
+		
+		/*薪酬操作*/
+		function formatterXinchou(value, row, index) {
+			return "<a style='cursor: pointer;' onclick='openNewGz(" + index + ")'>操作</a>";
+		}
+		var getUserId;
+		var getDpId;
+		var emId;
+		/**
+		 * 打开查询员工窗口
+		 * @param {Object} i
+		 */
+		function openBm(i){
+			$("#adduser_window").window("open");
+			getDpId="";
+			var datas = $("#dg").datagrid("getData"); //获取datagrid对应的json数据（对象集合）
+			var row = datas.rows[i]; //获取第index行对应的json对象。 index为传递过来的索引参数，从0开始，就像数组下标。
+			getDpId=row.bmId;
+			$("#adduser_window").window("setTitle", "“" + row.bmName + "”的员工")
+					$("#userDg").datagrid({
+						url: 'http://localhost:8080/HWWC/depart/queryDtUser.dao', //数据接口的地址
+						queryParams: { //要发送的参数列表
+							token: localToken,
+							dpId:row.bmId
+						}
+					});
+				
+			
+			
+		}
+		
+		/**
+		 * 打开新建员工窗口
+		 */
+		
+		function openNewEm(i){
+			
+			$("#addEmployee_window").window("open");
+			
+			
+		}
+		
+	
+		/**
+		 * 打开新建员工工资窗口
+		 */
+		function openNewGz(i){
+			$("#addcompen_window").window("open");
+			$("#day").numberbox("setValue","");
+			var datas = $("#userDg").datagrid("getData"); //获取datagrid对应的json数据（对象集合）
+			var row = datas.rows[i]; //获取第index行对应的json对象。 index为传递过来的索引参数，从0开始，就像数组下标。
+			getUserId=row.userId;
+			emId=row.id;
+			
+			$("#addcompen_window").window("setTitle", "“" + row.emName+"”薪酬结算单")
+				/*	$("#userDg").datagrid({
+						url: 'http://localhost:8080/HWWC/depart/queryDtUser.dao', //数据接口的地址
+						queryParams: { //要发送的参数列表
+							token: localToken,
+							dpId:row.bmId
+						}
+					});
+				*/
+			
+			
+		}
+		
+		/**
+		 * 打开添加部门窗口
+		 */
+		function openAddDp(){
+			$("#adddepartMent_window").window("open");
+			
+		}
+		/**
+		 * 获取全勤天数
+		 */
+		function GetTime(){
+			var slt=$("#dg").datagrid("getSelected");
+			$.post("http://localhost:8080/HWWC/compensation/queryQq.dao",{userId:getUserId,token:localToken,ksTime:slt.ksTime,jsTime:slt.jsTime},function(res){
+				
+				if(res>0){
+					$("#addGetTime_window").window("close");
+					$("#day").numberbox("setValue",res);
+				}else{
+					$.messager.alert("提示信息", "未知错误，请稍后重试！");
+				}
+			},"json")
+			
+			
+		}
+		
+		
+		/**
+		 * 发送工资单
+		 */
+		function savegz(){
+			
+			
+			if($("#addGzForm").form("validate")){
+					
+				$.post("http://localhost:8080/HWWC/compensation/addCs.dao",
+					$("#addGzForm").serialize()+"&creteUserId="+userId+"&token="+localToken+"&bm.bmId="+getDpId+"&userId="+emId+"&userId1="+getUserId
+				,function(res){
+					if(res>0){
+						$.messager.alert("提示信息", "发送成功！");
+						$("#addcompen_window").window("close");
+						$("#addGzForm").form("clear")
+					}
+					
+				},"json")
+			}
+			
+			getUserId="";
+		}
+		
+		
+		/**
+		 * 检测用户名是否可用
+		 */
+		function jcLoginName(){
+			var slt=$("#dg").datagrid("getSelected");
+			$.post("http://localhost:8080/HWWC/depart/addBmEm.dao",{
+				uname:$("#userName").textbox("getValue"),
+				token:localToken,
+				state:1,
+				dpId:slt.bmId
+	
+			},function(res){
+				if(res==-1){
+					$.messager.alert("提示信息", "此用户不存在！");
+					
+				}else if(res==-2){
+					$.messager.alert("提示信息", "此用户已存在该部门！");
+				}else{
+					$.messager.alert("提示信息", "用户名可用！");
+					
+				}
+					
+			},"json")
+			
+		}
+		
+		/**
+		 * 添加员工保存按钮
+		 */
+		function savaAddEm(){
+			var slt=$("#dg").datagrid("getSelected");
+		
+			$.post("http://localhost:8080/HWWC/depart/addBmEm.dao",{
+				uname:$("#userName").textbox("getValue"),
+				token:localToken,
+				state:0,
+				dpId:slt.bmId,
+				emName:$("#emName").textbox("getValue")
+			},function(res){
+				
+				if(res>0){	
+						$.messager.alert("提示信息", "添加成功！");
+						$("#addEmployee_window").window("close");
+						$("#addEmployeeForm").form("clear")
+					
+				}else if(res==-2){
+					$.messager.alert("提示信息", "此用户已存在该部门！");
+					
+				}else if(res==-1){
+					$.messager.alert("提示信息", "此用户不存在！");
+					
+				}
+					
+			},"json")
+			
+		}
+		
+		/**
+		 * 添加部门保存按钮
+		 */
+		function savaDepartMent(){
+		
+			if($("#picktime1").val()<$("#picktime").val()){
+				$.messager.alert("提示信息", "下班时间不允许小于上班时间!");
+				return;
+			}
+			if($("#addDepartForm").form("validate")){
+				$.post("http://localhost:8080/HWWC/depart/addDepartment.dao",
+				$("#addDepartForm").serialize()+"&token="+localToken
+				,function(res){
+					if(res==-1){
+						$.messager.alert("提示信息", "此部门已存在！");
+					}
+					if(res>0){
+						$.messager.alert("提示信息", "添加成功！");
+						$("#adddepartMent_window").window("close");addDepartForm
+						$("#addDepartForm").from("clear");
+						$("#dg").datagrid("reload");
+					}
+				},"json")
+				
+				
+			}
+	
+		}
+		
+		/**
+		 * 删除部门按钮
+		 */
+		function deleteDepartMent(i){
+			var data=$("#dg").datagrid("getData").rows[i];
+			
+			$.messager.confirm("提示信息", "您确定要删除“" + data.bmName + "”吗？", function(r) {
+				if(r){
+					$.post("http://localhost:8080/HWWC/depart/deleteDepartment.dao",{
+						token:localToken,
+						bmId:data.bmId
+						
+						},function(res){
+						if(res>0){
+							$.messager.alert("提示信息", "删除成功！");
+							$("#dg").datagrid("reload");
+						}
+					
+					},"json")
+					
+				}
+				
+			});
+			
+		}
+		
+		/**
+		 * 格式化编辑按钮
+		 * @param {Object} value
+		 * @param {Object} row
+		 * @param {Object} index
+		 */
+		function FmUpdatebm(value, row, index) {
+			return "<a  class='easyui-linkbutton'  title='编辑' iconcls='icon-pencil' onclick='Updatebm(" + index + ")' >编辑</a>";
+			
+		}
+		
+		/**
+		 * 修改部门
+		 */
+		function Updatebm(r) {
+			$("#updatebm_window").window("open")
+			var iname = $("#dg").datagrid("getData");
+			var row = iname.rows[r];
+			$("#updatebm").form('load', row);
+		}
+		
+		function updatebmForm() {
+			var slt=$("#dg").datagrid("getSelected");
+			if($("#updatebm").form("validate")){
+				$.post("http://localhost:8080/HWWC/depart/updatebm.dao",
+				$("#updatebm").serialize()+"&token="+localToken+"&bmId="+slt.bmId
+				
+				,
+					function(res) {
+						if(res > 0) {
+							$.messager.alert("提示信息", "修改部门成功");
+							$("#updatebm_window").window("close");
+							$("#dg").datagrid("reload");
+						} else {
+							$.messager.alert("提示信息", "修改部门失败");
+						}
+				}, "json")
+			}
+		}
+		
+		
+		
+	</script>
+</html>

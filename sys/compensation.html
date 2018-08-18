@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		
+		<link rel="stylesheet" type="text/css" href="/DomeH/js/easyui/themes/icon.css">
+		<link rel="stylesheet" type="text/css" href="/DomeH/js/easyui/themes/default/easyui.css">
+		<link rel="stylesheet" type="text/css" href="/DomeH/js/datedropper.css">
+		<link rel="stylesheet" type="text/css" href="/DomeH/js/timedropper.min.css">
+		<script type="text/javascript" src="/DomeH/js/easyui/jquery.min.js"></script>
+		<script type="text/javascript" src="/DomeH/js/easyui/jquery.easyui.min.js">
+		</script>
+		
+		<script src="/DomeH/js/datedropper.min.js"></script>
+		<script src="/DomeH/js/timedropper.min.js"></script>
+
+		<script type="text/javascript" src="/DomeH/js/easyUI/locale/easyui-lang-zh_CN.js"></script>
+		<script type="text/javascript" src="/DomeH/js/easyUIvalidate.js"></script>
+		<script src="/DomeH/js/login-permission-interceptor.js" type="text/javascript" charset="utf-8"></script>
+		<script src="/DomeH/js/data-require-permission.js"></script>
+		
+
+
+	</head>
+	<body>
+		&nbsp;&nbsp;选择月份：<input class="easyui-datebox" id="startTime" type="text" style="width: 100px;" />
+		<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search" onclick="querydg()">搜索</a>
+		<table name="center" id="dg" title="用户列表" style="width:300;height:400" data-options="rownumbers:true,singleSelect:true,pagination:true,method:'post',toolbar:'#usertb',pageSize:10">
+			<thead>
+				<tr>
+					<th data-options="field:'userName',width:100,align:'center'">员工编号</th>
+					<th data-options="field:'bm.bmName',width:100,align:'center',formatter:formatDepartmentName">员工部门</th>
+					<th data-options="field:'creteTime',width:180,align:'center'">提交时间</th>
+					<th data-options="field:'allDay',width:80,align:'center'">全勤天数</th>
+					<th data-options="field:'dixin',width:100,align:'center',formatter:formatdixin">底薪</th>
+					<th data-options="field:'bonus',width:100,align:'center',formatter:formatbonus">全勤奖金</th>
+					<th data-options="field:'otherBonus',width:100,align:'center',formatter:formatotherBonus">其他奖金</th>	
+					<th data-options="field:'allmoney',width:100,align:'center',formatter:formatallmoney">薪酬总计</th>
+					<th data-options="field:'content',width:100,align:'center',formatter:formatLength">备注</th> 
+					<th data-options="field:'setUserAction',width:120,align:'center',formatter:formattercz" id="dltUpd">操作</th>
+					<!--<th data-options="field:'userTelephone',width:100,">手机号</th>
+					<th data-options="field:'userIsLockout',width:60,">是否锁定</th>
+					<th data-options="field:'userCreateTime',width:160,">创建时间</th>
+					<th data-options="field:'userLastLoginTime',width:160,">最后登录的时间</th>
+					<th data-options="field:'userLastLoginIp',width:160,">最后登录的IP地址</th>
+					<th data-options="field:'setRoleAction',width:60,align:'center',formatter:formatterSetRole" data-require-permission='user:queryMyRoles'>角色</th>
+					<th data-options="field:'setUserAction',width:120,align:'center',formatter:formatterOPUser" id="dltUpd">操作</th>
+					<th data-options="field:'setPassword',width:80,align:'center',formatter:formatterResetPassword" data-require-permission='user:reset'>操作</th>
+					<th data-options="field:'setLock',width:140,align:'center',formatter:formatterLockUser" id="dltUpd2">用户操作</th>-->
+				</tr>
+			</thead>
+		</table>
+		
+		
+		
+		
+	</body>
+	
+	<script>
+		var localToken = window.sessionStorage.getItem("token");
+		var userId = window.sessionStorage.getItem("userid");
+		
+		$(function(){
+			
+			
+			$("#startTime").datebox({
+	              onShowPanel: function () {//显示日趋选择对象后再触发弹出月份层的事件，初始化时没有生成月份层  
+                       span.trigger('click'); //触发click事件弹出月份层  
+                       if (!tds) setTimeout(function () {//延时触发获取月份对象，因为上面的事件触发和对象生成有时间间隔  
+                           tds = p.find('div.calendar-menu-month-inner td');  
+                           tds.click(function (e) {  
+                               e.stopPropagation(); //禁止冒泡执行easyui给月份绑定的事件  
+                               var year = $(".calendar-menu-year").val();  
+                               var month = parseInt($(this).attr('abbr'), 10);  
+                               $('#startTime').datebox('hidePanel')//隐藏日期对象  
+                               .datebox('setValue', year + '-' + month); //设置日期的值  
+                           });  
+                       }, 0)  
+                   },  
+                   parser: function (s) {//配置parser，返回选择的日期  
+                       if (!s) return new Date();  
+                       var ss = (s.split('-'));  
+                       var y = parseInt(ss[0],10);  
+                       var m = parseInt(ss[1],10);              
+                       if (!isNaN(y) && !isNaN(m)){  
+                           return new Date(y,m-1);  
+                       } else {  
+                           return new Date();  
+                       }    
+                   },  
+                   formatter: function (d) {   
+                       debugger;  
+                       var y = d.getFullYear();  
+                       var m = d.getMonth()+1;  
+                       var d = d.getDate();  
+                       return y+'-'+(m<10?('0'+m):m);  
+                   }//配置formatter，只返回年月  
+			})
+		
+		 var p = $('#startTime').datebox('panel'), //日期选择对象  
+            tds = false, //日期选择对象中月份  
+            span = p.find('span.calendar-text'); //显示月份层的触发控件  
+            
+            querydg()
+		})
+	
+		
+		/**
+		 * 显示薪酬
+		 */
+		function querydg(){
+			
+			$("#dg").datagrid({
+					url: 'http://localhost:8080/HWWC/compensation/queryXc.dao', //数据接口的地址
+					queryParams: { //要发送的参数列表
+						token: localToken,
+						userCreateTime:$("#startTime").datebox("getValue")
+					},onLoadSuccess:function(){
+						$(".easyui-linkbutton").linkbutton();
+					}
+			});
+			
+		}
+		
+		//格式化部门名称
+		function formatDepartmentName(val,row,index){
+		    return row.bm.bmName;
+		}
+		//格式化底薪
+		function formatdixin(val,row,index){
+		    return "￥"+row.dixin+".00";
+		}
+		//格式化全勤奖
+		function formatbonus(val,row,index){
+		    return "￥"+row.bonus+".00";
+		}
+		//格式化其他奖金
+		function formatotherBonus(val,row,index){
+		    return "￥"+row.otherBonus+".00";
+		}
+		//格式化总金额
+		function formatallmoney(val,row,index){
+		    return "￥"+row.allmoney+".00";
+		}
+		
+		//格式化日志中的内容信息
+		function formatLength(value, row, index) {
+				var str = window.decodeURI(value);
+				if(str.length > 25) {
+					return '<div title="' + str + '">' + str.substr(0, 25) + "……" + '</div>';
+				} else {
+					return str;
+				}
+		}
+		/**
+		 * 格式化操作按钮
+		 */
+		function formattercz(value, row, index){
+			return '<a href="#" class="easyui-linkbutton" iconcls="icon-cancel" plain="true" title="拒绝" onclick="noGz('+index+')"></a>'+
+				'&nbsp;&nbsp;&nbsp;&nbsp;<a href="#" class="easyui-linkbutton" iconcls="icon-ok" plain="true" title="通过" onclick="OkGz('+index+')"></a>'
+		}
+		
+		/**
+		 * 工资单通过按钮
+		 */
+		function OkGz(i){
+			var data = $("#dg").datagrid("getData"); //获取datagrid对应的json数据（对象集合）
+			var row = data.rows[i]; //获取第index行对应的json对象。 index为传递过来的索引参数，从0开始，就像数组下标。
+			
+		
+			$.post("http://localhost:8080/HWWC/compensation/shenheCompen.dao",{
+				state:3,
+				token:localToken,
+				studentId:row.userId1,
+				cid:row.id,
+				studentName:row.userName
+			},function(res){
+					if(res>0){
+					$.messager.alert("提示信息", "审核通过！");
+					querydg();
+					}
+			},"json")
+		}
+		
+		/**
+		 * 拒绝工资单按钮
+		 */
+		function noGz(i){
+			var data = $("#dg").datagrid("getData"); //获取datagrid对应的json数据（对象集合）
+			var row = data.rows[i]; //获取第index行对应的json对象。 index为传递过来的索引参数，从0开始，就像数组下标。
+			
+				$.messager.prompt('拒绝理由', '请输入内容：', function(r) {
+					if(r) {
+						if(r.length = 0) {
+							return;
+						}
+						$.post("http://localhost:8080/HWWC/compensation/shenheCompen.dao",{
+							state:2,
+							token:localToken,
+							studentId:row.creteUserId,
+							cid:row.id,
+							messageContent:r,
+							studentName:row.userName
+						},function(res){
+								if(res>0){
+								$.messager.alert("提示信息", "驳回成功！");
+								querydg();
+								}
+						},"json")
+					}
+				});
+		}
+		</script>
+	</html>

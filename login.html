@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>系统登录</title>
+		<link rel="stylesheet" type="text/css" href="js/easyUI/themes/black/easyui.css">   
+		<link rel="stylesheet" type="text/css" href="js/easyUI/themes/icon.css">
+		<script type="text/javascript" src="js/easyUI/jquery.min.js"></script>
+		<script type="text/javascript" src="js/easyUI/jquery.easyui.min.js"></script>
+		<script type="text/javascript" src="js/easyUI/locale/easyui-lang-zh_CN.js"></script>
+		<script src="js/data-require-permission.js"></script>
+		
+		<script type="text/javascript">
+			
+			$(function() {
+			
+				
+				
+				$("#login").dialog({
+					width: 400,
+					height: 200,
+					title: '登录系统',
+					modal: true,
+					closable: false,
+					iconCls: 'icon-save'
+				});
+			});
+
+			function sub() {
+				
+				var uname = $("#uname").val();
+				var pwd = $("#pwd").val();
+				var flg = $("#loginForm").form("validate");
+				if(flg) {
+					$.post(
+						'http://localhost:8080/HWWC/login/login.dao', {
+							name: uname,
+							password: pwd
+						},
+						function(data) {
+							if(data.result) {
+								window.sessionStorage.setItem("userid", data.userid);
+								window.sessionStorage.setItem("uname", uname);
+								window.sessionStorage.setItem("token",data.token);
+								/*window.localStorage.setItem("permission",data.permission)*/
+								LiuGeTu.setPermission(data.permission);
+								window.location.href = "index.html";
+							} else {
+								$.messager.alert("错误提示", data.message);
+
+							}
+						},
+						'json'
+					);
+				}
+			}
+
+			function clearVal() {
+				$("#uname").val("");
+				$("#pwd").val("");
+			}
+		</script>
+		<style type="text/css">
+			#login {
+				text-align: center;
+				font-size: 15px;
+			}
+			
+			#uname {
+				margin-top: 20px;
+				margin-bottom: 10px;
+			}
+			
+			#pwd {
+				margin-bottom: 10px;
+			}
+			
+			input {
+				width: 180px;
+				height: 22px;
+				border-radius: 5px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id="login">
+			<form id="loginForm" style="margin-left: 50px;">
+				
+				<table>
+					
+					<tr>
+						<td>用户名:</td>
+						<td><input type="text" class="easyui-validatebox" data-options="required:true" missingMessage="用户名不能为空" invalidMessage="用户名必须填写" id="uname" /></td>
+						
+					</tr>
+					<tr>
+						
+						<td>密　码:</td>
+						<td><input type="password" class="easyui-validatebox" data-options="required:true" missingMessage="密码不能为空" invalidMessage="密码必须填写" id="pwd" /><br /></td>
+					</tr>
+					<tr style="position: relative; left: 50px;">
+						
+						<td><a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" onclick="sub()">登录系统</a></td>
+						<td><a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="clearVal()">清空输入</a></td>
+					</tr>
+					
+				</table>
+				
+				
+				
+			</form>
+		</div>
+	</body>
+
+</html>
